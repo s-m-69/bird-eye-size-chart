@@ -1,0 +1,63 @@
+{% comment %}
+BirdEye Size Studio V10 | Layout-neutral app block; DOES NOT edit theme source.
+Match the existing Kiwi insertion anchor: .size_select > .perfect_fit
+Product-specific chart: product.metafields.size_studio.chart_handle
+{% endcomment %}
+{% assign bss_product = block.settings.product | default: product %}
+{% if request.page_type == 'product' and bss_product != blank %}
+  {% assign size_studio_handle = bss_product.metafields.size_studio.chart_handle.value %}
+  {% if size_studio_handle != blank %}
+    {% assign size_studio_chart = shop.metaobjects.size_studio_chart[size_studio_handle] %}
+    {% if size_studio_chart != blank and size_studio_chart.chart_data.value != blank %}
+      <div class="bss" data-bss-v9-root
+        data-bss-product-id="{{ bss_product.id }}"
+        data-bss-mode="{{ block.settings.display_mode }}"
+        data-bss-name="{{ size_studio_chart.name.value | escape }}"
+        data-bss-handle="{{ size_studio_chart.handle | escape }}"
+        data-bss-json="{{ size_studio_chart.chart_data.value | json | escape }}"
+        data-bss-button-label="{{ block.settings.link_text | escape }}"
+        data-bss-hide-kiwi="{{ block.settings.hide_kiwi_link }}"
+        style="--bss-accent:{{ block.settings.text_color }};--bss-text:{{ block.settings.text_color }};--bss-panel-bg:{{ block.settings.background_color }};--bss-table-head:{{ block.settings.header_color }};--bss-separator:{{ block.settings.border_color }};--bss-muted:{{ block.settings.muted_color }};--bss-trigger-color:{{ block.settings.link_color }};--bss-space:{{ block.settings.content_spacing }}px;--bss-modal-width:{{ block.settings.modal_width }}px;--bss-overlay-opacity:{{ block.settings.overlay_opacity | divided_by: 100.0 }};--bss-radius:{{ block.settings.radius }}px;">
+        <div class="bss__layer" data-bss-layer data-bss-mode="{{ block.settings.display_mode }}" hidden>
+          <div class="bss__scrim" data-bss-close aria-hidden="true"></div>
+          <section class="bss__panel" role="dialog" aria-modal="true" aria-labelledby="bss-title-{{ product.id }}" tabindex="-1">
+            <div class="bss__head">
+              <h2 class="bss__heading" id="bss-title-{{ bss_product.id }}">{{ bss_product.title | escape }}</h2>
+              <button class="bss__close" type="button" data-bss-close aria-label="Close size guide"><span class="bss__close-mark" aria-hidden="true">×</span></button>
+            </div>
+            <div class="bss__content" data-bss-content></div>
+          </section>
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% schema %}
+{
+  "name": "BirdEye Size Studio",
+  "target": "section",
+  "enabled_on": { "templates": ["product"] },
+  "class": "bss-v9-app-block",
+  "javascript": "size-studio-embed.js",
+  "stylesheet": "size-studio-embed.css",
+  "settings": [
+    {"type":"product","id":"product","label":"Product","autofill":true},
+    {"type":"header","content":"Your existing PDP link"},
+    {"type":"paragraph","content":"Inserts before the existing .perfect_fit placeholder. No theme code edits. Add this app block to the Product information section. Only assigned products show a link."},
+    {"type":"text","id":"link_text","label":"Link text","default":"Find Your Perfect Fit"},
+    {"type":"checkbox","id":"hide_kiwi_link","label":"Hide Kiwi link on this theme for assigned products","default":true},
+    {"type":"select","id":"display_mode","label":"Open size guide as","options":[{"value":"modal","label":"Centred modal"},{"value":"drawer","label":"Side drawer"}],"default":"modal"},
+    {"type":"header","content":"Appearance"},
+    {"type":"color","id":"link_color","label":"Link colour","default":"#016066"},
+    {"type":"color","id":"text_color","label":"Heading and text","default":"#033C4F"},
+    {"type":"color","id":"muted_color","label":"Secondary text","default":"#627980"},
+    {"type":"color","id":"background_color","label":"Panel background","default":"#FFFFFF"},
+    {"type":"color","id":"header_color","label":"Table header background","default":"#F8FAFA"},
+    {"type":"color","id":"border_color","label":"Table and panel dividers","default":"#DEE7E9"},
+    {"type":"range","id":"modal_width","label":"Modal width","min":540,"max":900,"step":30,"unit":"px","default":780},
+    {"type":"range","id":"content_spacing","label":"Content padding","min":16,"max":36,"step":2,"unit":"px","default":24},
+    {"type":"range","id":"overlay_opacity","label":"Background dimming","min":20,"max":80,"step":5,"unit":"%","default":60},
+    {"type":"range","id":"radius","label":"Corner radius","min":0,"max":24,"step":2,"unit":"px","default":0}
+  ]
+}
+{% endschema %}

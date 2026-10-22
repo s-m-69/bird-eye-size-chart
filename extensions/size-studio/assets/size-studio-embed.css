@@ -1,0 +1,106 @@
+/* BirdEye Size Studio V10 — centred minimal aesthetic.
+   Shopify app block only. Preserves the existing .perfect_fit insertion point. */
+.bss{
+  --bss-panel-bg:#fff;--bss-text:#033C4F;--bss-muted:#71858B;--bss-accent:#033C4F;
+  --bss-table-head:#F8FAFA;--bss-separator:#E5EBED;--bss-radius:0px;
+  --bss-scale:14px;--bss-space:24px;--bss-modal-width:780px;
+  --bss-overlay-opacity:.58;--bss-body-font:inherit;
+  --bss-heading-font:var(--font-heading-family,inherit);
+  color:var(--bss-text);font-family:var(--bss-body-font)
+}
+.bss *, .bss *::before,.bss *::after,.bss__layer *, .bss__layer *::before,.bss__layer *::after{box-sizing:border-box}
+.bss__layer[hidden]{display:none!important}
+.bss__layer{
+  position:fixed;inset:0;z-index:2147482000;display:flex;justify-content:flex-end;align-items:stretch;
+  color:var(--bss-text);font-family:var(--bss-body-font,inherit);font-size:var(--bss-scale);line-height:1.45;
+  isolation:isolate;
+}
+.bss__scrim{position:absolute;inset:0;background:rgba(4,19,26,var(--bss-overlay-opacity));cursor:default}
+.bss__panel{
+  position:relative;width:min(100%,490px);height:100%;max-height:100%;overflow-y:auto;overscroll-behavior:contain;
+  background:var(--bss-panel-bg);color:var(--bss-text);border-radius:var(--bss-radius) 0 0 var(--bss-radius);
+  box-shadow:-10px 0 45px rgba(0,18,24,.13);animation:bss-drawer-in .21s ease-out;
+}
+/* The heading is mathematically centred in the panel, independent of the close control. */
+.bss__panel:focus{outline:none}
+.bss__head{
+  position:relative;display:flex;align-items:center;justify-content:center;
+  padding:26px 58px 10px;background:var(--bss-panel-bg);min-height:79px;
+}
+.bss__heading{
+  margin:0;text-align:center;color:var(--bss-text);font-family:var(--bss-heading-font,inherit);
+  font-size:20px;font-weight:750;line-height:1.25;letter-spacing:.018em;text-transform:uppercase;
+  overflow-wrap:anywhere;
+}
+.bss__close{
+  position:absolute;right:16px;top:17px;display:grid;place-items:center;width:40px;height:40px;
+  padding:0;border:0;border-radius:0;background:transparent;color:var(--bss-text);
+  font-family:Arial,sans-serif;font-size:30px;font-weight:300;line-height:1;cursor:pointer;
+}
+.bss__close:hover{background:var(--bss-table-head)}
+.bss__close-mark{display:block;transform:translateY(-1px)}
+.bss__content{padding:6px var(--bss-space) 26px}
+.bss__units-row{display:flex;align-items:center;justify-content:center;margin:2px 0 17px;min-height:34px}
+.bss__units{display:inline-flex;gap:0;align-items:center;justify-content:center;border:0;background:transparent}
+.bss__units button{
+  appearance:none;border:0;border-bottom:2px solid transparent;padding:6px 10px 7px;
+  background:transparent;color:var(--bss-muted);font:inherit;font-size:12px;font-weight:570;
+  line-height:1.1;letter-spacing:.035em;cursor:pointer;
+}
+.bss__units button:hover{color:var(--bss-text)}
+.bss__units button.is-selected{color:var(--bss-accent);border-bottom-color:var(--bss-accent);font-weight:760}
+.bss__unit-separator{font-size:11px;color:var(--bss-separator);padding:0 2px;margin-top:-2px}
+.bss__table-scroll{width:100%;overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--bss-separator) transparent}
+.bss__table{width:100%;border-collapse:collapse;table-layout:fixed;text-align:center;font:inherit;font-size:13px;font-variant-numeric:tabular-nums;color:var(--bss-text)}
+.bss__table thead th{
+  padding:11px 8px;text-align:center;white-space:nowrap;text-transform:uppercase;
+  font-size:12px;font-weight:720;letter-spacing:.04em;line-height:1.4;
+  background:var(--bss-table-head);border:1px solid var(--bss-separator)
+}
+.bss__table tbody th,.bss__table tbody td{
+  padding:13px 9px;text-align:center;white-space:nowrap;line-height:1.4;
+  font-size:13px;font-weight:480;border:1px solid var(--bss-separator)
+}
+.bss__table tbody th{font-weight:760;letter-spacing:.01em}
+.bss__table tbody tr:hover{background:color-mix(in srgb,var(--bss-table-head) 65%,transparent)}
+.bss__layer[data-bss-mode=modal]{align-items:center;justify-content:center;padding:22px}
+.bss__layer[data-bss-mode=modal] .bss__panel{
+  width:min(100%,var(--bss-modal-width));height:auto;max-height:calc(100dvh - 44px);
+  border-radius:var(--bss-radius);box-shadow:0 18px 65px rgba(0,18,24,.16);
+  animation:bss-modal-in .19s ease-out;
+}
+.bss__layer[data-bss-mode=drawer] .bss__head{padding-top:31px}
+.bss__layer[data-bss-mode=drawer] .bss__content{padding-top:6px}
+.bss__layer button:focus-visible,.bss__table-scroll:focus-visible,.bss-v9-trigger:focus-visible{
+  outline:2px solid var(--bss-accent);outline-offset:3px
+}
+/* Existing theme-owned hidden placeholder: the app inserts its own button before it. */
+.bss[data-bss-v9-root]{position:absolute!important;width:0!important;height:0!important;overflow:visible!important;pointer-events:none}
+.bss[data-bss-v9-root] .bss__layer{pointer-events:auto}
+.product__info-wrapper .bss-v9-trigger,.bss-v9-trigger{
+  appearance:none;-webkit-appearance:none;border:0;background:transparent;padding:0;
+  color:var(--bss-v9-link,#016066);font-family:inherit;font-size:12px;font-weight:600;
+  line-height:normal;letter-spacing:0;text-decoration:underline;text-underline-offset:4px;
+  text-decoration-color:var(--bss-v9-link,#016066);cursor:pointer;white-space:nowrap
+}
+.bss-v9-trigger:hover{opacity:.84}
+.size_select:has(> .bss-v9-trigger[data-bss-hide-kiwi="true"]) > .ks-chart-container,
+.size_select:has(> .bss-v9-trigger[data-bss-hide-kiwi="true"]) > .ks-chart-modal-link{display:none!important}
+.shopify-block.bss-v9-app-block{display:contents!important}
+@keyframes bss-modal-in{from{transform:translateY(9px) scale(.99);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+@keyframes bss-drawer-in{from{transform:translateX(22px);opacity:.5}to{transform:translateX(0);opacity:1}}
+@media(max-width:600px){
+  .bss__layer[data-bss-mode=modal]{padding:12px}
+  .bss__layer[data-bss-mode=modal] .bss__panel{width:100%;max-height:calc(100dvh - 24px)}
+  .bss__panel{width:100%;border-radius:0}
+  .bss__head,.bss__layer[data-bss-mode=drawer] .bss__head{padding:24px 52px 6px;min-height:66px}
+  .bss__heading{font-size:18px;line-height:1.25}
+  .bss__close{right:8px;top:10px;width:40px;height:40px;font-size:28px}
+  .bss__content{padding:6px 15px 19px}
+  .bss__table{font-size:12px}
+  .bss__table thead th{font-size:11px;padding:10px 6px}
+  .bss__table tbody th,.bss__table tbody td{font-size:12px;padding:12px 6px}
+  .bss__table thead th:first-child{position:sticky;left:0;z-index:1;background:var(--bss-table-head)}
+  .bss__table tbody th:first-child{position:sticky;left:0;z-index:1;background:var(--bss-panel-bg)}
+}
+@media(prefers-reduced-motion:reduce){.bss__panel{animation:none!important}}

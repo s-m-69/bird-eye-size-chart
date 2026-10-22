@@ -1,0 +1,17 @@
+.cache
+build
+node_modules
+
+# Exclude local and sensitive files
+.env
+.env.*
+node_modules
+build
+.git
+.shopify
+.backups
+.cursor
+.gemini
+.mcp.json
+*.sqlite
+*.sqlite-journal
