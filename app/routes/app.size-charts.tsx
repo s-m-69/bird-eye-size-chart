@@ -7,7 +7,8 @@ import { AdminSkeleton } from '../components/size-studio/AdminSkeleton';
 import { getDraftIssue } from '../components/size-studio/draftValidation';
 import { adminStyles } from '../styles/sizeStudioAdmin';
 import { authenticate } from '../shopify.server';
-import { getCharts, hasDefinition, installDefinition, saveChart, validateChart } from '../models/sizeStudio.server';
+import { getCharts, hasDefinition, installDefinition, saveChart, validateChart, deleteChart } from '../models/sizeStudio.server';
+import { scanChartUsage } from '../models/sizeStudioUsage.server';
 import type { Chart, ChartData } from '../models/sizeStudio.server';
 import { assignProductsById } from '../models/sizeStudioAssignments.server';
 import { importCsvBatch } from '../models/sizeStudioCsv.server';
@@ -40,6 +41,28 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       if (!id && current.length >= 250) throw new Error('The chart library has reached its current 250-chart limit.');
       const saved = await saveChart(admin, chart, id || undefined);
       return { ok: `“${chart.name}” saved.`, savedId: saved.id as string };
+    }
+    if (intent === 'delete-chart') {
+      const id = String(form.get('id') || '');
+      if (form.get('confirmation') !== 'DELETE') throw new Error('Type DELETE to confirm deletion.');
+      const { charts, truncated } = await getCharts(admin);
+      if (truncated) throw new Error('The chart library is incomplete. Delete is disabled to protect product guides.');
+      const chart = charts.find((item) => item.id === id);
+      if (!chart) throw new Error('Chart not found. Refresh the library.');
+      if (chart.productType?.trim() || chart.tag?.trim()) {
+        throw new Error('Remove this chart’s automatic matching rules before deleting it.');
+      }
+      // Always recheck server-side immediately before deletion; browser counts
+      // can become stale after another member of staff assigns a product.
+      const usage = await scanChartUsage(admin, [chart.handle]);
+      if (!usage.complete) {
+        throw new Error('Could not verify every product assignment. Chart was not deleted.');
+      }
+      if (usage.counts[chart.handle] !== 0) {
+        throw new Error(`This chart is assigned to ${usage.counts[chart.handle]} product(s). Reassign those products before deleting it.`);
+      }
+      await deleteChart(admin, chart.id);
+      return { ok: `“${chart.name}” deleted.`, deletedId: chart.id };
     }
     if (intent === 'import-batch') {
       const raw = String(form.get('payload') || '');
@@ -76,6 +99,14 @@ type AssignedProductsData = {
   chartHandle: string;
   products: PickedProduct[];
   incomplete: boolean;
+  error?: string;
+};
+type ChartUsageData = {
+  signature: string;
+  counts: Record<string, number>;
+  products: Record<string, PickedProduct[]>;
+  complete: boolean;
+  scanned: number;
   error?: string;
 };
 const blank = (): Draft => ({
@@ -130,11 +161,18 @@ export default function SizeChartsPage() {
   const [csvInFlight, setCsvInFlight] = useState(false);
   const csvFetcher = useFetcher<typeof action>();
   const assignedFetcher = useFetcher<AssignedProductsData>();
+  const usageFetcher = useFetcher<ChartUsageData>();
+  const [confirmDelete, setConfirmDelete] = useState<Chart | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const lastCsvResponse = useRef<unknown>(null);
 
   const active = useMemo(() => charts.find((c) => c.id === editingId), [charts, editingId]);
   const filtered = useMemo(() => charts.filter((c) => c.name.toLowerCase().includes(search.toLowerCase().trim())), [charts, search]);
   const busy = navigation.state !== 'idle';
+  const chartSignature = useMemo(() => charts.map((c) => c.handle).sort().join('|'), [charts]);
+  const usageReady = usageFetcher.state === 'idle' &&
+    usageFetcher.data?.signature === chartSignature && !usageFetcher.data?.error;
+  const usage = usageReady ? usageFetcher.data : undefined;
   const assignedLoading = assignedFetcher.state !== 'idle' ||
     (Boolean(active?.handle) && assignedFetcher.data?.chartHandle !== active?.handle);
   const savedAssignments = !assignedLoading && assignedFetcher.data?.chartHandle === active?.handle
@@ -148,6 +186,20 @@ export default function SizeChartsPage() {
       setEditingId(actionData.savedId);
       setTab('products');
       setScreen('editor');
+    }
+  }, [actionData]);
+
+  // Aggregate assignment counts once per library view, not once per chart.
+  useEffect(() => {
+    if (installed && screen === 'library') usageFetcher.load('/app/chart-usage');
+  }, [installed, screen, chartSignature]);
+
+  // Dismiss the confirmation after a successful delete, without deleting
+  // anything merely because a confirmation dialog was opened.
+  useEffect(() => {
+    if (actionData && 'deletedId' in actionData && actionData.deletedId) {
+      setConfirmDelete(null);
+      setDeleteConfirmation('');
     }
   }, [actionData]);
 
@@ -323,15 +375,60 @@ export default function SizeChartsPage() {
       </> : screen === 'library' ? <>
         <div className="bs-v11-summary"><div><span className="bs-v11-big">{charts.length}</span><span className="bs-v11-muted">Saved charts</span></div><span className="bs-v11-small">Measurements in inches</span></div>
         <div className="bs-v11-library">
-          <div className="bs-v11-search-row"><label htmlFor="bs-v11-search">Find a size chart</label><input id="bs-v11-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search charts..." /></div>
-          {truncated && <p className="bs-v11-alert error">Showing the first 250 charts only. This starter requires pagination for larger libraries.</p>}
+          <div className="bs-v11-search-row"><label htmlFor="bs-v11-search">Find a size chart</label><input id="bs-v11-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search charts..." /><button type="button" className="bs-v11-btn subtle" disabled={usageFetcher.state !== 'idle'} onClick={() => usageFetcher.load('/app/chart-usage')} aria-label="Refresh product assignment counts">↻ Refresh counts</button></div>
+          {truncated && <p className="bs-v11-alert error">Showing the first 250 charts only. This starter requires pagination for larger libraries.</p>}{usageFetcher.data?.error && <p role="alert" className="bs-v11-alert error">Could not load assignment counts: {usageFetcher.data.error}. Deletion remains unavailable.</p>}{usageReady && usage && !usage.complete && <p role="status" className="bs-v11-alert error">Only {usage.scanned} Shopify products were checked; counts are lower bounds. Deleting charts is disabled until the full catalogue can be verified.</p>}
           {!filtered.length ? <div className="bs-v11-empty"><h2>{charts.length ? 'No matching charts' : 'No charts yet'}</h2><p className="bs-v11-muted">{charts.length ? 'Try a different name.' : 'Create your first chart to get started.'}</p><button type="button" className="bs-v11-btn primary" onClick={create}>+ New chart</button></div>
-          : filtered.map((chart) => <div className="bs-v11-chart-row" key={chart.id}>
-            <div className="bs-v11-chart-icon" aria-hidden="true">—</div>
-            <div className="bs-v11-chart-info"><strong>{chart.name}</strong><span>{chart.data.rows.length} sizes · {Math.max(0, chart.data.columns.length - 1)} measurements · inches</span></div>
-            <button type="button" className="bs-v11-btn subtle" onClick={() => duplicate(chart)} aria-label={`Duplicate ${chart.name}`}>Duplicate</button>
-            <button type="button" className="bs-v11-btn" onClick={() => edit(chart)} aria-label={`Edit ${chart.name}`}>Edit →</button>
-          </div>)}
+          : filtered.map((chart) => {
+            const count = usage?.counts[chart.handle];
+            const assignedProducts = usage?.products?.[chart.handle] ?? [];
+            const hasAutoMatching = Boolean(chart.productType?.trim() || chart.tag?.trim());
+            const deletePermitted = usageReady && usage?.complete && !truncated && count === 0 && !hasAutoMatching;
+            const deleteExplanation = !usageReady ? 'Wait for assignment counts to load' :
+              !usage?.complete || truncated ? 'The library or product scan is incomplete' :
+              hasAutoMatching ? 'Remove automatic matching rules first' :
+              count !== 0 ? 'Reassign this chart’s products before deleting' : 'Delete unused chart';
+            return <div className="bs-v11-chart-row" key={chart.id}>
+              <div className="bs-v11-chart-icon" aria-hidden="true">—</div>
+              <div className="bs-v11-chart-info">
+                <div className="bs-v11-name-hover">
+                  <button type="button" className="bs-v11-chart-name-trigger" aria-label={`Show products assigned to ${chart.name}`} aria-describedby={`bs-v11-assignment-preview-${chart.id}`}>
+                    {chart.name}
+                  </button>
+                  <div className="bs-v11-assignment-popover" id={`bs-v11-assignment-preview-${chart.id}`} role="tooltip">
+                    <div className="bs-v11-popover-head">Assigned to following products:</div>
+                    {!usageReady ? <p className="bs-v11-popover-empty">{usageFetcher.data?.error ? 'Unable to load assignments.' : 'Checking Shopify assignments…'}</p> : assignedProducts.length ? (
+                      <div className="bs-v11-popover-products">
+                        {assignedProducts.map((product) => (
+                          <div className="bs-v11-popover-product" key={product.id}>
+                            <div className="bs-v11-popover-thumb">{product.image ? <img src={product.image} alt="" loading="lazy" /> : <span aria-hidden="true">▧</span>}</div>
+                            <span className="bs-v11-popover-title">{product.title}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="bs-v11-popover-empty">No directly assigned products.</p>
+                    )}
+                    {usageReady && usage && !usage.complete && <p className="bs-v11-popover-incomplete">Partial results — additional assignments may exist.</p>}
+                    {hasAutoMatching && <p className="bs-v11-popover-incomplete">Automatic matching rules may apply to other products.</p>}
+                  </div>
+                </div>
+                <span>{chart.data.rows.length} sizes · {Math.max(0, chart.data.columns.length - 1)} measurements · inches</span>
+                <div className="bs-v11-count-wrap">
+                  <span className={'bs-v11-usage-pill' + (typeof count === 'number' && count > 0 ? ' assigned' : '')}>
+                    {!usageReady ? (usageFetcher.data?.error || 'Checking assignments…') :
+                      !usage?.complete ? `At least ${count ?? 0} assigned (incomplete)` :
+                      `${count ?? 0} product${count === 1 ? '' : 's'} assigned`}
+                  </span>
+                  {hasAutoMatching && <span className="bs-v11-usage-note">Auto-match rules enabled</span>}
+                </div>
+              </div>
+              <div className="bs-v11-chart-actions">
+                <button type="button" className="bs-v11-btn subtle" onClick={() => duplicate(chart)} aria-label={`Duplicate ${chart.name}`}>Duplicate</button>
+                <button type="button" className="bs-v11-btn danger" disabled={!deletePermitted || busy} title={deleteExplanation} onClick={() => {setDeleteConfirmation(''); setConfirmDelete(chart);}} aria-label={`Delete ${chart.name}`}>Delete</button>
+                <button type="button" className="bs-v11-btn" onClick={() => edit(chart)} aria-label={`Edit ${chart.name}`}>Edit →</button>
+              </div>
+            </div>;
+          })}
         </div>
       </> : <>
         <div className="bs-v11-steps" aria-label="Chart setup steps"><button aria-current={tab === 'measurements' ? 'step' : undefined} className={tab === 'measurements' ? 'selected' : ''} type="button" onClick={() => setTab('measurements')}><span>1</span> Measurements</button>
@@ -384,6 +481,62 @@ export default function SizeChartsPage() {
         </div>}
       </>}
     </div>
-    <style>{adminStyles}</style>
+    {confirmDelete && <div className="bs-v11-delete-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) {setConfirmDelete(null); setDeleteConfirmation('');} }}>
+      <section className="bs-v11-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="bs-v11-delete-title" aria-describedby="bs-v11-delete-desc" onKeyDown={(event) => {if (event.key === 'Escape') {setConfirmDelete(null); setDeleteConfirmation('');}}}>
+        <div className="bs-v11-delete-head"><h2 id="bs-v11-delete-title">Delete size chart?</h2><button type="button" className="bs-v11-delete-close" aria-label="Close deletion dialog" onClick={() => {setConfirmDelete(null); setDeleteConfirmation('');}}>×</button></div>
+        <p id="bs-v11-delete-desc">This will permanently remove <strong>{confirmDelete.name}</strong> from Shopify. Only unused charts can be deleted. This cannot be undone.</p>
+        {actionData && 'error' in actionData && actionData.error && <p className="bs-v11-alert error" role="alert">{actionData.error}</p>}
+        <Form method="post">
+          <input type="hidden" name="intent" value="delete-chart" />
+          <input type="hidden" name="id" value={confirmDelete.id} />
+          <label className="bs-v11-label">Type DELETE to confirm<input autoFocus autoComplete="off" name="confirmation" value={deleteConfirmation} onChange={(event) => setDeleteConfirmation(event.target.value)} placeholder="DELETE" /></label>
+          <div className="bs-v11-delete-footer"><button type="button" className="bs-v11-btn" onClick={() => {setConfirmDelete(null);setDeleteConfirmation('');}}>Cancel</button><button type="submit" className="bs-v11-btn danger-solid" disabled={deleteConfirmation !== 'DELETE' || busy}>Delete chart permanently</button></div>
+        </Form>
+      </section>
+    </div>}
+    <style>{adminStyles + libraryEnhancementStyles}</style>
   </s-page>;
 }
+
+const libraryEnhancementStyles = String.raw`
+
+/* Product hover preview: appears on mouse hover, keyboard focus, and tap-to-focus. */
+.bs-v11-chart-row:hover,.bs-v11-chart-row:focus-within{position:relative;z-index:20}
+.bs-v11-name-hover{position:relative;width:max-content;max-width:100%}
+.bs-v11-name-hover::after{content:"";position:absolute;left:0;top:100%;width:100%;height:12px}
+.bs-v11-chart-name-trigger{display:block;max-width:100%;border:0;background:none;padding:2px 0;margin:0;color:var(--bss-ink,#103d4c);font:inherit;font-weight:740;font-size:16px;text-align:left;line-height:1.4;cursor:help;overflow-wrap:anywhere}
+.bs-v11-chart-name-trigger:hover{text-decoration:underline;text-underline-offset:3px}
+.bs-v11-chart-name-trigger:focus-visible{outline:2px solid #147387;outline-offset:3px}
+.bs-v11-assignment-popover{position:absolute;z-index:1000;left:0;top:calc(100% + 9px);width:min(370px,calc(100vw - 36px));padding:0;border:1px solid #d4e0e1;background:#fff;color:#173c48;box-shadow:0 16px 42px rgba(12,38,47,.16);visibility:hidden;opacity:0;pointer-events:none;transform:translateY(-4px);transition:opacity .12s ease,transform .12s ease,visibility .12s}
+.bs-v11-name-hover:hover .bs-v11-assignment-popover,.bs-v11-name-hover:focus-within .bs-v11-assignment-popover{visibility:visible;opacity:1;pointer-events:auto;transform:translateY(0)}
+.bs-v11-popover-head{font-size:13px;font-weight:750;color:#103d4c;border-bottom:1px solid #e2e9ea;padding:15px 16px}
+.bs-v11-popover-products{max-height:290px;overflow-y:auto;overscroll-behavior:contain;padding:5px 12px}
+.bs-v11-popover-product{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid #eef1f1;min-width:0}
+.bs-v11-popover-product:last-child{border-bottom:0}
+.bs-v11-popover-thumb{display:flex;align-items:center;justify-content:center;width:52px;height:62px;flex:0 0 52px;background:#f3f5f5;border:1px solid #e9eeee;color:#94a2a4;overflow:hidden}
+.bs-v11-popover-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.bs-v11-assignment-popover .bs-v11-popover-title{font-size:13px;line-height:1.4;font-weight:600;color:#203c49;overflow-wrap:anywhere}
+.bs-v11-popover-empty,.bs-v11-popover-incomplete{font-size:12px;color:#526771;margin:0;padding:13px 16px;line-height:1.45}
+.bs-v11-popover-incomplete{border-top:1px solid #e6eded;background:#f8faf9}
+@media(hover:none){.bs-v11-chart-name-trigger{cursor:pointer}.bs-v11-assignment-popover{position:fixed;left:14px;right:14px;bottom:16px;top:auto;width:auto;max-height:75vh}}
+@media(prefers-reduced-motion:reduce){.bs-v11-assignment-popover{transition:none}}
+.bs-v11-count-wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:4px}
+.bs-v11-usage-pill{display:inline-flex;width:max-content;max-width:100%;padding:5px 10px;border:1px solid #dae3e4;color:#38505a;background:#f5f8f8;border-radius:3px;font-size:12px;font-weight:680;font-variant-numeric:tabular-nums}
+.bs-v11-usage-pill.assigned{background:#eaf3f0;border-color:#c8ddd5;color:#205b46}
+.bs-v11-usage-note{font-size:12px;color:#6c5c38}
+.bs-v11-chart-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.bs-v11-chart-actions .bs-v11-btn{min-width:0}
+.bs-v11-chart-actions .bs-v11-btn.danger{color:#922941;background:white;border-color:transparent}
+.bs-v11-chart-actions .bs-v11-btn.danger:hover:not(:disabled){background:#fff1f3;border-color:#e1b0b8}
+.bs-v11-chart-actions .bs-v11-btn.danger:disabled{border-color:transparent;color:#7c868b;background:transparent;opacity:.7}
+.bs-v11-delete-backdrop{position:fixed;z-index:999999;inset:0;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(3,25,34,.48)}
+.bs-v11-delete-dialog{background:white;color:#103d4c;border:1px solid #b3c4c8;padding:clamp(20px,4vw,38px);width:min(100%,510px);max-height:85vh;overflow:auto;box-shadow:0 18px 70px rgba(0,20,29,.2)}
+.bs-v11-delete-head{display:flex;gap:14px;justify-content:space-between;align-items:start}
+.bs-v11-delete-head h2{font-size:24px;font-weight:740;letter-spacing:-.025em;margin:0}
+.bs-v11-delete-close{min-width:40px;min-height:40px;font-size:30px;line-height:1;border:0;background:transparent;color:#103d4c}
+.bs-v11-delete-dialog p{line-height:1.55;margin:18px 0 22px}
+.bs-v11-delete-footer{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:22px}
+.bs-v11-btn.danger-solid{border:1px solid #922941;background:#922941;color:white}
+.bs-v11-btn.danger-solid:hover:not(:disabled){background:#751c32}
+@media(max-width:900px){.bs-v11-chart-actions{justify-content:flex-start}.bs-v11-chart-info{flex-basis:calc(100% - 45px)}.bs-v11-chart-row{flex-wrap:wrap}}
+`;
