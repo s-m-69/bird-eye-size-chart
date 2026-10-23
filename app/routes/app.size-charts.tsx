@@ -58,6 +58,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
       const result = await assignProductsById(admin, productIds as string[], chartHandle, form.get('allowReplace') === 'yes');
       return {
+        assignedHandle: chartHandle,
         ok: result.count
           ? `Size chart assigned to ${result.count} product${result.count === 1 ? '' : 's'}.${result.unchanged ? ` ${result.unchanged} already had this chart.` : ''}`
           : `All ${result.unchanged} selected products already use this size chart.`,
@@ -71,6 +72,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 type Draft = Pick<Chart, 'name' | 'productType' | 'tag' | 'data'>;
 type PickedProduct = { id: string; title: string; image?: string };
+type AssignedProductsData = {
+  chartHandle: string;
+  products: PickedProduct[];
+  incomplete: boolean;
+  error?: string;
+};
 const blank = (): Draft => ({
   name: '', productType: '', tag: '', data: {
     unit: 'in', columns: ['Size', 'Waist', 'Hip'],
@@ -122,11 +129,16 @@ export default function SizeChartsPage() {
   const [csvRunning, setCsvRunning] = useState(false);
   const [csvInFlight, setCsvInFlight] = useState(false);
   const csvFetcher = useFetcher<typeof action>();
+  const assignedFetcher = useFetcher<AssignedProductsData>();
   const lastCsvResponse = useRef<unknown>(null);
 
   const active = useMemo(() => charts.find((c) => c.id === editingId), [charts, editingId]);
   const filtered = useMemo(() => charts.filter((c) => c.name.toLowerCase().includes(search.toLowerCase().trim())), [charts, search]);
   const busy = navigation.state !== 'idle';
+  const assignedLoading = assignedFetcher.state !== 'idle' ||
+    (Boolean(active?.handle) && assignedFetcher.data?.chartHandle !== active?.handle);
+  const savedAssignments = !assignedLoading && assignedFetcher.data?.chartHandle === active?.handle
+    ? assignedFetcher.data : undefined;
   const saveIssue = getDraftIssue(draft);
   const [csvParsing, setCsvParsing] = useState(false);
   const [pickerBusy, setPickerBusy] = useState(false);
@@ -136,6 +148,23 @@ export default function SizeChartsPage() {
       setEditingId(actionData.savedId);
       setTab('products');
       setScreen('editor');
+    }
+  }, [actionData]);
+
+  // Read Shopify's saved product metafields only when an existing chart's
+  // product tab opens. This is separate from the add-products picker state.
+  useEffect(() => {
+    if (screen === 'editor' && tab === 'products' && active?.handle) {
+      assignedFetcher.load(`/app/assigned-products?handle=${encodeURIComponent(active.handle)}`);
+    }
+  }, [screen, tab, active?.handle]);
+
+  // Refresh the assigned list after the existing mutation successfully saves.
+  useEffect(() => {
+    if (actionData && 'assignedHandle' in actionData &&
+        actionData.assignedHandle && actionData.assignedHandle === active?.handle) {
+      setSelectedProducts([]);
+      assignedFetcher.load(`/app/assigned-products?handle=${encodeURIComponent(actionData.assignedHandle)}`);
     }
   }, [actionData]);
 
@@ -326,11 +355,27 @@ export default function SizeChartsPage() {
           <div className="bs-v11-preview-card"><div className="bs-v11-preview-card-heading"><h2>Customer preview</h2><button className="bs-v11-btn subtle" type="button" aria-expanded={showPreview} aria-controls="bs-v11-customer-preview" onClick={() => setShowPreview((p) => !p)}>{showPreview ? 'Hide preview' : 'Show preview'}</button></div>{showPreview && <div id="bs-v11-customer-preview"><ChartPreview draft={draft} productTitle={selectedProducts[0]?.title}/></div>}</div>
         </div> : <div className="bs-v11-products">
           <h2>Choose products</h2><p className="bs-v11-muted">Search your Shopify catalogue, select products, and assign <strong>{active?.name}</strong>. No product handles or URLs needed.</p>
-          <button type="button" className="bs-v11-btn picker" onClick={pickProducts} disabled={pickerBusy} aria-busy={pickerBusy}>{pickerBusy ? 'Opening product search…' : 'Search Shopify products →'}</button>
+          <section aria-label="Products already assigned to this chart" className="bs-v11-assigned-products">
+            <h3>Already assigned</h3>
+            {assignedLoading ? <p role="status" className="bs-v11-muted">Checking saved Shopify assignments…</p>
+            : savedAssignments?.error ? <div role="alert" className="bs-v11-alert error">{savedAssignments.error}</div>
+            : savedAssignments?.products.length ? <>
+                <p className="bs-v11-muted">{savedAssignments.products.length} product{savedAssignments.products.length === 1 ? '' : 's'} currently use this chart.</p>
+                <div className="bs-v11-selected">{savedAssignments.products.map((product) =>
+                  <div key={product.id} className="bs-v11-product-row">
+                    <span className="bs-v11-product-image">{product.image ? <img src={product.image} alt=""/> : '▧'}</span>
+                    <strong>{product.title}</strong>
+                    <span className="bs-v11-muted">Assigned</span>
+                  </div>)}</div>
+              </>
+            : <p className="bs-v11-muted">{savedAssignments?.incomplete ? 'No matches among the products checked; additional assignments may exist.' : 'No saved product assignments found for this chart.'}</p>}
+            {savedAssignments?.incomplete && <p role="status" className="bs-v11-muted">Only the first 3,000 Shopify products could be checked. This list may be incomplete.</p>}
+          </section>
+          <button type="button" className="bs-v11-btn picker" onClick={pickProducts} disabled={pickerBusy} aria-busy={pickerBusy}>{pickerBusy ? 'Opening product search…' : 'Add more Shopify products →'}</button>
           {pickerError && <div role="alert" className="bs-v11-alert error">{pickerError}</div>}
           {selectedProducts.length > 0 ? <div className="bs-v11-selected"><div className="bs-v11-selected-heading">{selectedProducts.length} selected product{selectedProducts.length === 1 ? '' : 's'}</div>
             {selectedProducts.map((product) => <div key={product.id} className="bs-v11-product-row"><span className="bs-v11-product-image">{product.image ? <img src={product.image} alt=""/> : '▧'}</span><strong>{product.title}</strong><button type="button" aria-label={`Remove ${product.title}`} onClick={() => setSelectedProducts((list) => list.filter((p) => p.id !== product.id))}>×</button></div>)}
-          </div> : <p className="bs-v11-muted bs-v11-products-hint">No products selected yet. Existing assignments, including Flow Leggings, are preserved.</p>}
+          </div> : <p className="bs-v11-muted bs-v11-products-hint">No additional products selected. Existing assignments above are preserved.</p>}
           <Form method="post"><input name="intent" type="hidden" value="assign-picked"/><input name="chartHandle" type="hidden" value={active?.handle || ''}/><input name="productIds" type="hidden" value={JSON.stringify(selectedProducts.map((p) => p.id))}/>
             <label className="bs-v11-checkbox"><input name="allowReplace" type="checkbox" value="yes" checked={replace} onChange={(e) => setReplace(e.target.checked)}/>Replace a product's existing size chart if it already has a different one</label>
             <button className="bs-v11-btn primary" type="submit" disabled={!active || busy || selectedProducts.length === 0}>Assign chart to {selectedProducts.length || ''} product{selectedProducts.length === 1 ? '' : 's'}</button>
