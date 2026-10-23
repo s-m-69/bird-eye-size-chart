@@ -1,2 +1,7 @@
-import { redirect } from 'react-router';
-export const loader = () => redirect('/app/size-charts');
+import type { LoaderFunctionArgs } from "react-router";
+import { authenticate } from "../shopify.server";
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const { redirect } = await authenticate.admin(request);
+  return redirect("/app/size-charts");
+};
