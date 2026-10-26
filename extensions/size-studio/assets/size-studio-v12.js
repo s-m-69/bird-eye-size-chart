@@ -7,7 +7,9 @@
   const toInches = (n, unit) => unit === 'cm' ? n / 2.54 : n;
   const display = (s) => String(s ?? '').trim();
   const labels = ['Runs small','Runs slightly small','True to size','Runs slightly large','Runs large'];
-  const supportLabels = ['Low support','Mid support','High support'];
+  const supportLabels = ['Level 1 of 5','Level 2 of 5','Level 3 of 5','Level 4 of 5','Level 5 of 5'];
+  const barKind = chart => chart?.supportType === 'compression' ? 'Compression' : 'Support';
+  const hasBar = chart => Number.isInteger(chart?.supportLevel) && chart.supportLevel >= 1 && chart.supportLevel <= 5 && (chart.supportType === undefined || chart.supportType === 'support' || chart.supportType === 'compression');
   function interval(value) {
     if (typeof value !== 'string' && typeof value !== 'number') return null;
     const m = display(value).replace(/[–—−]/g, '-').match(/^\s*(\d+(?:\.\d+)?)\s*(?:-\s*(\d+(?:\.\d+)?))?\s*$/);
@@ -90,20 +92,22 @@
       chart_handle:root?.dataset.bssHandle||null, context:contextFor(root),
       recommended_size:outcome?.size||null, alternate_size:outcome?.alternate||null,
       result_type:outcome?.type||null, fit_rating:Number.isInteger(chart?.fitScale)?chart.fitScale:null,
-      support_level:Number.isInteger(chart?.supportLevel)?chart.supportLevel:null};
+      support_level:hasBar(chart)?chart.supportLevel:null,
+      support_type:hasBar(chart)?barKind(chart).toLowerCase():null};
     try{global.Shopify?.analytics?.publish?.('birdeye_size_studio:'+event,payload)}catch(_err){/* privacy/analytics failure never breaks sizing */}
   }
   function supportBar(chart) {
-    const rating=chart?.supportLevel;
-    if (!Number.isInteger(rating)||rating<1||rating>3) return null;
+    if(!hasBar(chart))return null;
+    const rating=chart.supportLevel,kind=barKind(chart);
     const section=create('section','bss-v12-support');
-    const h=create('h3','bss-v12-subtitle','Support');section.append(h);
-    const track=create('div','bss-v12-support-track');track.setAttribute('role','img');track.setAttribute('aria-label',supportLabels[rating-1]);
-    for(let i=1;i<=3;i++)track.append(create('span',i===rating?'is-selected':''));
+    section.append(create('h3','bss-v12-subtitle',kind));
+    const track=create('div','bss-v12-support-track');track.setAttribute('role','img');
+    track.setAttribute('aria-label',`${kind}: ${rating} of 5`);
+    for(let i=1;i<=5;i++)track.append(create('span',i===rating?'is-selected':''));
     section.append(track);
-    const labelRow=create('div','bss-v12-track-labels');
-    for(const title of ['LOW SUPPORT','MID SUPPORT','HIGH SUPPORT'])labelRow.append(create('span','',title));
-    section.append(labelRow);return section;
+    const captions=create('div','bss-v12-track-labels');
+    for(const text of [`LOW ${kind.toUpperCase()}`,`MID ${kind.toUpperCase()}`,`HIGH ${kind.toUpperCase()}`])captions.append(create('span','',text));
+    section.append(captions);return section;
   }
   function fitBar(chart) {
     const rating=chart?.fitScale;
@@ -120,17 +124,17 @@
     wrapper.append(captions);return wrapper;
   }
   function compactSupportBar(chart) {
-    const rating=chart?.supportLevel;
-    if(!Number.isInteger(rating)||rating<1||rating>3)return null;
+    if(!hasBar(chart))return null;
+    const rating=chart.supportLevel,kind=barKind(chart);
     const wrapper=create('section','bss-v12-compact-support');
     const title=create('div','bss-v12-info-title');
-    title.append(create('span','','Support'),create('span','bss-v12-info-value',supportLabels[rating-1]));wrapper.append(title);
+    title.append(create('span','',kind),create('span','bss-v12-info-value',`${rating} / 5`));wrapper.append(title);
     const track=create('div','bss-v12-support-track');track.setAttribute('role','img');
-    track.setAttribute('aria-label',`Support: ${supportLabels[rating-1]}`);
-    for(let i=1;i<=3;i++)track.append(create('span',i===rating?'is-selected':''));
+    track.setAttribute('aria-label',`${kind}: ${rating} of 5`);
+    for(let i=1;i<=5;i++)track.append(create('span',i===rating?'is-selected':''));
     wrapper.append(track);
     const captions=create('div','bss-v12-track-labels');
-    for(const text of ['LOW SUPPORT','MID SUPPORT','HIGH SUPPORT'])captions.append(create('span','',text));
+    for(const text of [`LOW ${kind.toUpperCase()}`,`MID ${kind.toUpperCase()}`,`HIGH ${kind.toUpperCase()}`])captions.append(create('span','',text));
     wrapper.append(captions);return wrapper;
   }
   function renderCalculator(chart,root,unit,onChart) {
@@ -218,7 +222,7 @@
       if(outcome.type==='recommended'||outcome.type==='between_sizes'){
         // The fit/support display is advisory only: do not silently shift a size.
         if(fit)result.append(create('p','bss-v12-fit-note','Fit: '+labels[chart.fitScale-1]+'.'));
-        if(support)result.append(create('p','bss-v12-fit-note','Support: '+supportLabels[chart.supportLevel-1]+'.'));
+        if(support)result.append(create('p','bss-v12-fit-note',barKind(chart)+': '+chart.supportLevel+' of 5.'));
         emit('recommendation_generated',root,chart,outcome);
       }
     });

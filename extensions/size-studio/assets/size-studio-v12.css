@@ -165,3 +165,6 @@
   .bss-v12-enhanced[data-bss-v12-view="chart"] .bss__table-scroll{max-height:calc(100dvh - 255px)}
   .bss-v12-enhanced[data-bss-v12-view="calculator"] .bss-v12-calculator-grid{display:grid}
 }
+
+/* V12.0.7 — five-position Support or Compression indicator; independent of Fit. */
+.bss-v12-enhanced .bss-v12-support-track,.bss-v12-support-track{grid-template-columns:repeat(5,minmax(0,1fr));}

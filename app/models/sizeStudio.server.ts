@@ -20,8 +20,9 @@ function checkMutation<T extends { userErrors?: { message: string }[] }>(payload
 export type ChartData = {
   /** Optional merchandising fit indicator: 1=small, 3=true to size, 5=large. */
   fitScale?: number;
-  /** Optional support: 1 low, 2 mid, 3 high. */
+  /** Numeric Support or Compression bar rating, 1–5. Legacy bars default to Support. */
   supportLevel?: number;
+  supportType?: 'support' | 'compression';
   /** Only verified body ranges can produce a customer size recommendation. */
   recommendationBasis?: "body" | "garment" | "unverified";
   unit: "cm" | "in";
@@ -132,10 +133,17 @@ export function validateChart(value: any): Omit<Chart, "id" | "handle"> {
   // BSS_V12_0_0 — verified body sizing gate and merchandising support marker.
   const support = raw.supportLevel;
   if (support !== undefined && support !== null && support !== '') {
-    if (typeof support !== 'number' || !Number.isInteger(support) || support < 1 || support > 3) {
-      throw new Error('Support must be Low (1), Mid (2), High (3), or blank.');
+    if (typeof support !== 'number' || !Number.isInteger(support) || support < 1 || support > 5) {
+      throw new Error('Bar rating must be a whole number from 1 to 5.');
     }
     data.supportLevel = support;
+  }
+  // BSS_V12_0_7_SUPPORT_COMPRESSION — categorical display choice, NOT an algorithm adjustment.
+  const barType = raw.supportType;
+  if (barType !== undefined && barType !== null && barType !== '') {
+    if (barType !== 'support' && barType !== 'compression') throw new Error('Bar Type must be Support or Compression.');
+    if (data.supportLevel === undefined) throw new Error('Select a rating from 1 to 5 for the selected bar.');
+    data.supportType = barType;
   }
   const basis = raw.recommendationBasis;
   if (basis !== undefined && basis !== null && basis !== '') {

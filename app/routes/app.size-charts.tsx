@@ -17,6 +17,9 @@ import type { CsvPlan, ImportResult } from '../models/sizeStudioCsv';
 import { planFitCsv, fitCsvTemplate, FIT_BATCH_SIZE } from '../models/sizeStudioFitCsv';
 import type { FitUpdate, FitResult } from '../models/sizeStudioFitCsv';
 import { updateFitBatch } from '../models/sizeStudioFitCsv.server';
+import { planSupportCsv, supportCsvTemplate, SUPPORT_BATCH_SIZE } from '../models/sizeStudioSupportCsv';
+import type { SupportUpdate, SupportResult } from '../models/sizeStudioSupportCsv';
+import { updateSupportBatch } from '../models/sizeStudioSupportCsv.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
@@ -73,6 +76,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       const batch: unknown = JSON.parse(raw);
       const importResults = await importCsvBatch(admin, batch);
       return { importResults };
+    }
+    // BSS_V12_0_7_SUPPORT_COMPRESSION — validated server-side before chart update.
+    if (intent === 'update-support-batch') {
+      const raw=String(form.get('payload') || '');
+      if (raw.length>10000) throw new Error('Bar update payload too large.');
+      return {supportResults:await updateSupportBatch(admin,JSON.parse(raw))};
     }
     if (intent === 'update-fit-batch') {
       const raw = String(form.get('payload') || '');
@@ -186,8 +195,14 @@ export default function SizeChartsPage() {
   const savedAssignments = !assignedLoading && assignedFetcher.data?.chartHandle === active?.handle
     ? assignedFetcher.data : undefined;
   const fitRating = draft.data.fitScale;
+  const supportRating = draft.data.supportLevel;
   const saveIssue = fitRating !== undefined && (!Number.isInteger(fitRating) || fitRating < 1 || fitRating > 5)
-    ? 'Fit rating must be a whole number between 1 and 5.' : getDraftIssue(draft);
+    ? 'Fit rating must be a whole number between 1 and 5.'
+    : supportRating !== undefined && (!Number.isInteger(supportRating) || supportRating < 1 || supportRating > 5)
+    ? 'Support/Compression rating must be a whole number between 1 and 5.'
+    : draft.data.supportType && supportRating === undefined
+    ? 'Enter a rating from 1 to 5 for the selected Support/Compression bar.'
+    : getDraftIssue(draft);
   const [csvParsing, setCsvParsing] = useState(false);
   const [pickerBusy, setPickerBusy] = useState(false);
 
@@ -352,6 +367,7 @@ export default function SizeChartsPage() {
         <Form method="post"><input type="hidden" name="intent" value="setup"/><button className="bs-v11-btn primary" type="submit">Set up library</button></Form></div>
       : screen === 'import' ? <>
         <FitCsvUpdater charts={charts} truncated={truncated} />
+        <SupportCsvUpdater charts={charts} truncated={truncated} />
         <div className="bs-v11-import-layout">
           <section className="bs-v11-csv-steps">
             <div className="bs-v11-step-index">01 — TEMPLATE</div>
@@ -472,19 +488,33 @@ export default function SizeChartsPage() {
               </div>
               {/* BSS_V12_0_0 — optional support attribute and body-range approval. */}
               <section className="bs-v12-settings" aria-label="Support and size recommendations">
-                <label className="bs-v11-label">Support (optional)
-                  <select value={draft.data.supportLevel ?? ''} onChange={(e) => {
-                    const v=e.currentTarget.value;
-                    modify((d) => {
-                      if (!v) delete d.data.supportLevel;
-                      else d.data.supportLevel=Number(v);
-                    });
-                  }}>
-                    <option value="">Not applicable — hide Support bar</option>
-                    <option value="1">Low support</option>
-                    <option value="2">Mid support</option>
-                    <option value="3">High support</option>
+                {/* BSS_V12_0_7_SUPPORT_COMPRESSION — one optional 1–5 bar per chart. */}
+                <label className="bs-v11-label" htmlFor="bs-v12-bar-type">Bar Type (optional)
+                  <select id="bs-v12-bar-type" value={draft.data.supportType ?? (draft.data.supportLevel === undefined ? '' : 'support')}
+                    onChange={(event) => {
+                      const kind = event.currentTarget.value;
+                      modify((chart) => {
+                        if (!kind) { delete chart.data.supportType; delete chart.data.supportLevel; }
+                        else chart.data.supportType = kind as 'support' | 'compression';
+                      });
+                    }}>
+                    <option value="">None — hide bar</option>
+                    <option value="support">Support</option>
+                    <option value="compression">Compression</option>
                   </select>
+                </label>
+                <label className="bs-v11-label" htmlFor="bs-v12-bar-rating">Rating (1–5)
+                  <input id="bs-v12-bar-rating" type="number" min={1} max={5} step={1} inputMode="numeric"
+                    placeholder="1–5" disabled={!draft.data.supportType && draft.data.supportLevel === undefined}
+                    value={draft.data.supportLevel ?? ''}
+                    onChange={(event) => {
+                      const raw = event.currentTarget.value;
+                      modify((chart) => {
+                        if (raw === '') delete chart.data.supportLevel;
+                        else { chart.data.supportLevel = Number(raw); if (!chart.data.supportType) chart.data.supportType = 'support'; }
+                      });
+                    }}/>
+                  <span className="bs-v12-bar-hint">Numeric 1–5, just like Fit. The selected type controls the storefront label. Blank/None hides the bar.</span>
                 </label>
                 <label className="bs-v11-label">Size recommendation eligibility
                   <select value={draft.data.recommendationBasis ?? 'unverified'} onChange={(e) => {
@@ -555,7 +585,7 @@ export default function SizeChartsPage() {
         </Form>
       </section>
     </div>}
-    <style>{adminStyles + libraryEnhancementStyles + fitScaleEditorStyles + v12SettingsStyles}</style>
+    <style>{adminStyles + libraryEnhancementStyles + fitScaleEditorStyles + v12SettingsStyles + v12BarNumericStyles}</style>
   </s-page>;
 }
 
@@ -723,6 +753,109 @@ function FitCsvUpdater({ charts, truncated }: { charts: Chart[]; truncated: bool
   </section>;
 }
 
+function SupportCsvUpdater({ charts, truncated }: { charts: Chart[]; truncated: boolean }) {
+  const fetcher = useFetcher<typeof action>();
+  const [updates, setUpdates] = useState<SupportUpdate[]>([]);
+  const [filename, setFilename] = useState('');
+  const [error, setError] = useState('');
+  const [results, setResults] = useState<SupportResult[]>([]);
+  const [offset, setOffset] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [inFlight, setInFlight] = useState(false);
+  const lastResponse = useRef<unknown>(null);
+  const countByName = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const chart of charts) {
+      const key = canonicalChartName(chart.name);
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return counts;
+  }, [charts]);
+  const updated = results.filter((r) => r.status === 'updated').length;
+  const unchanged = results.filter((r) => r.status === 'unchanged').length;
+  const failures = results.filter((r) => r.status === 'error');
+  const finished = updates.length > 0 && offset >= updates.length && !running;
+
+  function downloadRatings() {
+    const csv = '\uFEFF' + supportCsvTemplate(charts);
+    const href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = href;
+    a.download = 'BirdEye_Support_Compression_Ratings.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(href);
+  }
+  async function loadRatings(file?: File) {
+    if (!file || running || inFlight) return;
+    setFilename(file.name); setUpdates([]); setError(''); setResults([]); setOffset(0);
+    if (!/\.csv$/i.test(file.name) || file.size > 256 * 1024) {
+      setError('Upload a CSV file under 256 KB.'); return;
+    }
+    if (truncated) { setError('Chart library is incomplete. Bulk updates are disabled.'); return; }
+    try {
+      const parsed = planSupportCsv(await file.text());
+      const missing = parsed.filter((item) => countByName.get(canonicalChartName(item.name)) !== 1);
+      if (missing.length) throw new Error('Unknown or ambiguous chart names: ' + missing.slice(0, 8).map((c) => c.name).join(', ') + (missing.length > 8 ? '…' : '') + '. All names must match the existing chart library.');
+      setUpdates(parsed);
+    } catch (err) { setError(err instanceof Error ? err.message : 'The CSV could not be read.'); }
+  }
+  function runUpdates() {
+    if (!updates.length || truncated || inFlight) return;
+    setError(''); setResults([]); setOffset(0);
+    lastResponse.current = fetcher.data;
+    setRunning(true);
+  }
+  useEffect(() => {
+    if (!running || inFlight || fetcher.state !== 'idle') return;
+    if (offset >= updates.length) { setRunning(false); return; }
+    setInFlight(true);
+    fetcher.submit({ intent: 'update-support-batch', payload: JSON.stringify(updates.slice(offset, offset + SUPPORT_BATCH_SIZE)) }, { method: 'post' });
+  }, [running, inFlight, fetcher.state, offset, updates]);
+  useEffect(() => {
+    if (!inFlight || fetcher.state !== 'idle' || !fetcher.data || fetcher.data === lastResponse.current) return;
+    lastResponse.current = fetcher.data;
+    setInFlight(false);
+    if ('supportResults' in fetcher.data && Array.isArray(fetcher.data.supportResults)) {
+      const next = fetcher.data.supportResults as SupportResult[];
+      setResults((all) => [...all, ...next]);
+      if (next.some((row) => row.status === 'error')) {
+        setError('Some ratings failed. Check the results; successful rows were saved. Reupload the same file to retry safely.');
+        setRunning(false);
+      } else {
+        setOffset((value) => value + next.length);
+      }
+    } else {
+      const reason = ('error' in fetcher.data && fetcher.data.error) ? String(fetcher.data.error) : 'Shopify did not confirm this batch.';
+      setError(reason + ' Reupload the same CSV to retry safely.');
+      setRunning(false);
+    }
+  }, [inFlight, fetcher.state, fetcher.data]);
+  return <section className="bs-v11-csv-review" aria-label="Update Support / Compression ratings from CSV">
+    <div className="bs-v11-review-head"><div>
+      <div className="bs-v11-step-index">QUICK UPDATE / EXISTING CHARTS</div>
+      <h2>Bulk update Support / Compression ratings</h2>
+      <p className="bs-v11-muted">Download the prefilled chart list. Choose Bar Type = Support or Compression and Rating = 1–5; save as CSV and upload. Measurements and product assignments stay untouched. Blank type and rating = leave unchanged; <strong>clear</strong> = remove rating.</p>
+    </div></div>
+    <div className="bs-v11-csv-footer" style={{display:'flex',gap:12,flexWrap:'wrap',alignItems:'center'}}>
+      <button type="button" className="bs-v11-btn" disabled={running || inFlight || truncated || !charts.length} onClick={downloadRatings}>Download my Support / Compression ratings CSV ↓</button>
+      <label htmlFor="bs-support-csv-file">Upload updated CSV</label>
+      <input id="bs-support-csv-file" aria-label="Upload Support / Compression ratings CSV" type="file" accept=".csv,text/csv" disabled={running || inFlight || truncated} onChange={(event) => void loadRatings(event.target.files?.[0])}/>
+    </div>
+    {filename && <p className="bs-v11-muted">{filename}</p>}
+    {updates.length > 0 && <div className="bs-v11-csv-footer">
+      <p className="bs-v11-muted">{updates.length} existing chart rating{updates.length===1?'':'s'} ready. {updates.slice(0,5).map((row) => `${row.name}: ${row.type ? row.type+' '+row.rating : 'clear'}`).join(' · ')}{updates.length>5?' …':''}</p>
+      <button type="button" className="bs-v11-btn primary" disabled={running || inFlight || truncated || finished} onClick={runUpdates}>{running || inFlight ? 'Updating ratings…' : finished ? 'Ratings updated ✓' : `Update ${updates.length} Support / Compression ratings`}</button>
+    </div>}
+    {results.length > 0 && <p role="status" className="bs-v11-csv-progress">{updated} updated · {unchanged} unchanged · {failures.length} errors · {Math.min(offset,updates.length)} of {updates.length} processed</p>}
+    {failures.length > 0 && <p role="alert" className="bs-v11-alert error">{failures.slice(0,4).map((row) => `${row.name}: ${row.message}`).join(' · ')}</p>}
+    {error && <p role="alert" className="bs-v11-alert error">{error}</p>}
+    {finished && !error && <p role="status" className="bs-v11-alert success">Support / Compression rating update complete. Refresh your chart library to see the latest ratings.</p>}
+  </section>;
+}
+
+
 // BSS_V12_0_0 — editor settings only, scoped to Size Studio.
 const v12SettingsStyles = String.raw`
 .bs-v12-settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin:14px 0 20px;padding:20px;border:1px solid #e3ebed;background:#fbfcfc}
@@ -730,4 +863,11 @@ const v12SettingsStyles = String.raw`
 .bs-v12-settings select{display:block;width:100%;height:43px;margin-top:7px;padding:8px 10px;font:inherit;font-size:13px;color:#033C4F;background:#fff;border:1px solid #b9cdd1;border-radius:0}
 .bs-v12-settings select:focus-visible{outline:2px solid #033C4F;outline-offset:2px}
 .bs-v12-settings p{grid-column:1/-1;margin:0;font-size:12px;line-height:1.5}
+`;
+
+// BSS_V12_0_7_SUPPORT_COMPRESSION — numeric 1–5 input, consistent with Fit.
+const v12BarNumericStyles = String.raw`
+.bs-v12-settings input[type="number"]{display:block;width:125px;height:42px;margin-top:7px;padding:9px 12px;border:1px solid #b9cdd1;border-radius:0;background:#fff;color:#033C4F;font:inherit;font-size:16px;font-variant-numeric:tabular-nums}
+.bs-v12-settings input[type="number"]:focus-visible{outline:2px solid #033C4F;outline-offset:2px}
+.bs-v12-bar-hint{display:block;margin-top:8px;font-size:11px;line-height:1.5;color:#526974}
 `;
