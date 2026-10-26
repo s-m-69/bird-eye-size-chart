@@ -1,8 +1,9 @@
-/* BirdEye Size Studio V12 – additive global enhancement. No third-party dependencies. */
+/* BirdEye Size Studio V12.0.5 – stable modal, chart-first, verified-body calculator, global quick view. */
 (function (global) {
   'use strict';
   if (global.__BSS_V12_LOADED__) return;
   global.__BSS_V12_LOADED__ = true;
+  global.__BSS_V12_BUILD__ = '12.0.5';
   const toInches = (n, unit) => unit === 'cm' ? n / 2.54 : n;
   const display = (s) => String(s ?? '').trim();
   const labels = ['Runs small','Runs slightly small','True to size','Runs slightly large','Runs large'];
@@ -104,58 +105,198 @@
     for(const title of ['LOW SUPPORT','MID SUPPORT','HIGH SUPPORT'])labelRow.append(create('span','',title));
     section.append(labelRow);return section;
   }
+  function fitBar(chart) {
+    const rating=chart?.fitScale;
+    if(!Number.isInteger(rating)||rating<1||rating>5)return null;
+    const wrapper=create('section','bss-v12-compact-fit');
+    const title=create('div','bss-v12-info-title');
+    title.append(create('span','','Fit'),create('span','bss-v12-info-value',labels[rating-1]));wrapper.append(title);
+    const track=create('div','bss__fit-track');track.setAttribute('role','img');
+    track.setAttribute('aria-label',`Fit: ${labels[rating-1]}`);
+    for(let i=1;i<=5;i++)track.append(create('span',i===rating?'bss__fit-segment is-active':'bss__fit-segment'));
+    wrapper.append(track);
+    const captions=create('div','bss__fit-labels');
+    for(const text of ['Runs Small','True to Size','Runs Large'])captions.append(create('span','',text));
+    wrapper.append(captions);return wrapper;
+  }
+  function compactSupportBar(chart) {
+    const rating=chart?.supportLevel;
+    if(!Number.isInteger(rating)||rating<1||rating>3)return null;
+    const wrapper=create('section','bss-v12-compact-support');
+    const title=create('div','bss-v12-info-title');
+    title.append(create('span','','Support'),create('span','bss-v12-info-value',supportLabels[rating-1]));wrapper.append(title);
+    const track=create('div','bss-v12-support-track');track.setAttribute('role','img');
+    track.setAttribute('aria-label',`Support: ${supportLabels[rating-1]}`);
+    for(let i=1;i<=3;i++)track.append(create('span',i===rating?'is-selected':''));
+    wrapper.append(track);
+    const captions=create('div','bss-v12-track-labels');
+    for(const text of ['LOW SUPPORT','MID SUPPORT','HIGH SUPPORT'])captions.append(create('span','',text));
+    wrapper.append(captions);return wrapper;
+  }
   function renderCalculator(chart,root,unit,onChart) {
     const section=create('section','bss-v12-calculator');
-    const header=create('div','bss-v12-calculator-head');header.append(create('h3','', 'Find My Size'));
-    const description=create('p','','Enter your body measurements to check your fit.');header.append(description);section.append(header);
+    section.setAttribute('aria-label','Find My Size');
     const content=create('div','bss-v12-calculator-grid');
     const figure=create('div','bss-v12-image');
     const imageURL=root?.dataset.bssImage || settings()?.dataset.bssImage || '';
-    if(imageURL && /^(https?:\/\/|\/\/|\/)/.test(imageURL)) {const img=create('img');img.src=imageURL;img.alt='Model and body measurement guidance';img.loading='lazy';figure.append(img)}
-    else figure.append(create('div','bss-v12-image-placeholder','Measurement guide'));
+    if(imageURL && /^(https?:\/\/|\/\/|\/)/.test(imageURL)) {
+      const img=create('img');img.src=imageURL;img.alt='Model showing where to take body measurements';img.loading='lazy';figure.append(img);
+    }else {figure.hidden=true;content.classList.add('bss-v12-no-image');}
     const form=create('form','bss-v12-form');form.noValidate=true;
-    const selectedUnit=create('div','bss-v12-unit-choice');selectedUnit.setAttribute('role','group');selectedUnit.setAttribute('aria-label','Measurement units');
+    const header=create('div','bss-v12-calculator-head');
+    header.append(create('h3','','Find My Size'));
+    const approved=chart?.recommendationBasis==='body';
+    header.append(create('p','',approved?'Enter your measurements to find your fit.':'Explore the fit details for this style.'));
+    form.append(header);
+    const selectedUnit=create('div','bss-v12-unit-choice');
+    selectedUnit.setAttribute('role','group');selectedUnit.setAttribute('aria-label','Measurement units');
     let measureUnit=unit==='cm'?'cm':'in';
     const measurements={};
-    function repaintUnits(){ for(const btn of selectedUnit.querySelectorAll('button')){ const selected=btn.dataset.unit===measureUnit;btn.classList.toggle('is-selected',selected);btn.setAttribute('aria-pressed',String(selected)) }}
-    for(const name of ['in','cm']){const b=create('button','',name.toUpperCase());b.type='button';b.dataset.unit=name;b.addEventListener('click',()=>{ if(measureUnit===name)return; for(const field of Object.values(measurements)){if(field.value){const v=Number(field.value);if(Number.isFinite(v))field.value=String(Number((v*(name==='cm'?2.54:1/2.54)).toFixed(2))) } }measureUnit=name;repaintUnits();for(const el of form.querySelectorAll('.bss-v12-unit'))el.textContent=measureUnit.toUpperCase() });selectedUnit.append(b)}repaintUnits();form.append(selectedUnit);
+    function repaintUnits(){for(const btn of selectedUnit.querySelectorAll('button')) {
+      const selected=btn.dataset.unit===measureUnit;
+      btn.classList.toggle('is-selected',selected);btn.setAttribute('aria-pressed',String(selected));
+    }}
+    for(const name of ['in','cm']) {
+      const b=create('button','',name.toUpperCase());b.type='button';b.dataset.unit=name;
+      b.addEventListener('click',()=>{
+        if(measureUnit===name)return;
+        for(const field of Object.values(measurements)){
+          if(field.value){const v=Number(field.value);
+            if(Number.isFinite(v))field.value=String(Number((v*(name==='cm'?2.54:1/2.54)).toFixed(2)));
+          }
+        }
+        measureUnit=name;repaintUnits();
+        for(const el of form.querySelectorAll('.bss-v12-unit'))el.textContent=measureUnit.toUpperCase();
+      });
+      selectedUnit.append(b);
+    }
+    repaintUnits();form.append(selectedUnit);
+    const insights=create('div','bss-v12-insights');
+    const fit=fitBar(chart),support=compactSupportBar(chart);
+    if(fit)insights.append(fit);
+    if(support)insights.append(support);
+    if(insights.childElementCount)form.append(insights);
     const dims=fields(chart);
     const result=create('div','bss-v12-result');result.setAttribute('aria-live','polite');
-    for(const dim of dims){const wrapper=create('label','bss-v12-field');wrapper.append(create('span','',dim.label));const input=create('input');input.type='number';input.min='1';input.max='300';input.step='any';input.inputMode='decimal';input.autocomplete='off';input.placeholder='Enter measurement';input.setAttribute('aria-label',dim.label);measurements[dim.key]=input;wrapper.append(input,create('span','bss-v12-unit',measureUnit.toUpperCase()));form.append(wrapper)}
+    if(approved&&dims.length){
+      const inputArea=create('div','bss-v12-inputs');
+      for(const dim of dims){
+        const wrapper=create('label','bss-v12-field');wrapper.append(create('span','',dim.label));
+        const input=create('input');input.type='number';input.min='1';input.max='300';input.step='any';
+        input.inputMode='decimal';input.autocomplete='off';input.placeholder='Enter measurement';
+        input.setAttribute('aria-label',dim.label);measurements[dim.key]=input;
+        wrapper.append(input,create('span','bss-v12-unit',measureUnit.toUpperCase()));inputArea.append(wrapper);
+      }
+      form.append(inputArea);
+    }
+    const actions=create('div','bss-v12-actions');
     const btn=create('button','bss-v12-submit','Calculate my size');btn.type='submit';
-    const actions=create('div','bss-v12-actions');actions.append(btn);
-    const chartBtn=create('button','bss-v12-secondary','View size chart');chartBtn.type='button';chartBtn.addEventListener('click',()=>onChart?.());actions.append(chartBtn);form.append(actions);
-    form.addEventListener('submit',e=>{e.preventDefault();result.replaceChildren();const entered=Object.fromEntries(Object.entries(measurements).map(([key,input])=>[key,input.value]));const outcome=estimate(chart,entered,measureUnit);const h=create('h4','',outcome.type==='recommended'?`Recommended size: ${outcome.size}`:outcome.type==='between_sizes'?`Between sizes${outcome.size?': '+outcome.size+(outcome.alternate?' / '+outcome.alternate:''):''}`:'Unable to recommend a size');result.append(h);
-      const explanation=outcome.type==='recommended'?'Your measurements fit within the approved body-sizing range.':outcome.type==='between_sizes'?(outcome.reason||'More than one size fits. Compare both sizes in the chart.'):(outcome.reason||'Check the measurements and the size chart.');result.append(create('p','',explanation));
-      if(outcome.type==='recommended'||outcome.type==='between_sizes'){const fit=chart?.fitScale;if(Number.isInteger(fit)&&fit>=1&&fit<=5)result.append(create('p','bss-v12-fit-note','Fit note: '+labels[fit-1]+'.'));const support=chart?.supportLevel;if(Number.isInteger(support)&&support>=1&&support<=3)result.append(create('p','bss-v12-fit-note','Support: '+supportLabels[support-1]+'.'))}
-      if(outcome.type==='recommended'||outcome.type==='between_sizes')emit('recommendation_generated',root,chart,outcome);
+    if(approved&&dims.length)actions.append(btn);
+    const chartBtn=create('button','bss-v12-secondary','View size chart');chartBtn.type='button';
+    chartBtn.addEventListener('click',()=>onChart?.());
+    if(!approved||!dims.length)chartBtn.classList.add('is-primary');
+    actions.append(chartBtn);form.append(actions);
+    if(!approved){
+      const note=create('p','bss-v12-caution','Personalised size recommendations are being verified for this style. View the size chart for current measurements.');
+      form.append(note);
+    }else if(!dims.length){
+      form.append(create('p','bss-v12-caution','This style currently has no supported body-measurement fields.'));
+    }
+    form.addEventListener('submit',e=>{
+      e.preventDefault();if(!approved||!dims.length)return;
+      result.replaceChildren();
+      const entered=Object.fromEntries(Object.entries(measurements).map(([key,input])=>[key,input.value]));
+      const outcome=estimate(chart,entered,measureUnit);
+      if(outcome.type==='incomplete'||outcome.type==='invalid'){
+        result.append(create('p','bss-v12-caution','Please enter valid measurements in every field.'));
+        measurements[outcome.missing||outcome.field]?.focus();return;
+      }
+      const h=create('h4','',outcome.type==='recommended'?`Recommended size: ${outcome.size}`:outcome.type==='between_sizes'?`Between sizes${outcome.size?': '+outcome.size+(outcome.alternate?' / '+outcome.alternate:''):''}`:'No exact size match');
+      result.append(h);
+      const explanation=outcome.type==='recommended'?'Your measurements fall within this style’s approved body-size range.':outcome.type==='between_sizes'?(outcome.reason||'More than one size fits. Compare the measurements in the chart.'):(outcome.reason||'Check the measurements and review the size chart.');
+      result.append(create('p','',explanation));
+      if(outcome.type==='recommended'||outcome.type==='between_sizes'){
+        // The fit/support display is advisory only: do not silently shift a size.
+        if(fit)result.append(create('p','bss-v12-fit-note','Fit: '+labels[chart.fitScale-1]+'.'));
+        if(support)result.append(create('p','bss-v12-fit-note','Support: '+supportLabels[chart.supportLevel-1]+'.'));
+        emit('recommendation_generated',root,chart,outcome);
+      }
     });
-    if(chart?.recommendationBasis!=='body'){btn.disabled=true;result.append(create('p','bss-v12-caution','Size recommendation is not available until the body-measurement ranges are verified. You can still use the size chart.'))}
-    else if(!dims.length){btn.disabled=true;result.append(create('p','bss-v12-caution','This chart has no supported measurement fields.'))}
     form.append(result);content.append(figure,form);section.append(content);return section;
+  }
+  function applyView(layer,mode,focus=true){
+    const content=layer.querySelector('[data-bss-content]');if(!content)return;
+    const view=mode==='chart'?'chart':'calculator';
+    layer.dataset.bssV12View=view;layer.classList.add('bss-v12-enhanced');
+    const calculator=content.querySelector('.bss-v12-calculator');
+    const table=content.querySelector('.bss__table-scroll');
+    const originalUnits=content.querySelector('.bss__units-row');
+    const legacyFit=content.querySelector('.bss__fit-scale');
+    const legacySupport=content.querySelector('.bss-v12-support');
+    const navigation=content.querySelector('.bss-v12-chart-navigation');
+    for(const el of [calculator,table,originalUnits,legacyFit,legacySupport,navigation]){
+      if(!el)continue;
+      const isChartPart=el!==calculator;
+      el.hidden=isChartPart?view!=='chart':view!=='calculator';
+    }
+    if(focus){
+      const panel=layer.querySelector('.bss__panel');if(panel)panel.scrollTop=0;
+      if(view==='chart')navigation?.querySelector('button')?.focus();
+      else (calculator?.querySelector('input')||calculator?.querySelector('.bss-v12-unit-choice button')||calculator?.querySelector('button'))?.focus();
+    }
+  }
+  function enhanceLayer(layer,root,chart){
+    const content=layer.querySelector('[data-bss-content]');if(!content)return false;
+    // Critical: eligibility can be unverified/garment. In that case there is no
+    // calculator node, so using its presence as an init marker makes every
+    // MutationObserver pass prepend another heading indefinitely.
+    // Claim the exact content node *before* inserting any DOM elements.
+    if(content.dataset.bssV12Initialized==='true' && content.querySelector('.bss-v12-chart-navigation'))return false;
+    const table=content.querySelector('.bss__table-scroll');if(!table)return false;
+    content.dataset.bssV12Initialized='true';
+    const bar=supportBar(chart);if(bar)table.before(bar);
+    const unit=content.querySelector('[data-bss-unit].is-selected')?.dataset.bssUnit||'in';
+    const navigation=create('div','bss-v12-chart-navigation');
+    navigation.append(create('h3','','Size chart'));
+    const canRecommend=chart.recommendationBasis==='body' && fields(chart).length>0;
+    if(canRecommend){
+      const toCalculator=create('button','bss-v12-find','Find My Size');toCalculator.type='button';
+      toCalculator.addEventListener('click',()=>applyView(layer,'calculator'));
+      navigation.append(toCalculator);
+    }
+    content.prepend(navigation);
+    if(canRecommend){
+      const calculator=renderCalculator(chart,root,unit,()=>applyView(layer,'chart'));
+      table.before(calculator);
+    }
+    // Size chart ALWAYS opens first; approved customers can opt into the calculator.
+    applyView(layer,layer.dataset.bssV12View||'chart',false);
+    emit('guide_opened',root,chart);
+    return true;
   }
   // Enhance legacy PDP size-guide modal without changing any of its existing chart/table handling.
   const layerOwner=new WeakMap();
   function scanLayers(){
-    for(const root of doc.querySelectorAll('[data-bss-v9-root]')) {
+    for(const root of doc.querySelectorAll('[data-bss-v9-root]')){
       const layer=root.querySelector('[data-bss-layer]');if(layer)layerOwner.set(layer,root);
     }
     for(const layer of doc.querySelectorAll('[data-bss-layer]')){
-      if(layer.hidden)continue;
-      const content=layer.querySelector('[data-bss-content]');if(!content||content.querySelector('.bss-v12-calculator'))continue;
-      const root=layerOwner.get(layer)||doc.querySelector('[data-bss-v9-root]');if(!root)continue;
-      const chart=readChart(root);if(!chart||!Array.isArray(chart.rows))continue;
-      const table=content.querySelector('.bss__table-scroll');if(!table)continue;
-      const bar=supportBar(chart);if(bar)table.before(bar);
-      const unit=content.querySelector('[data-bss-unit].is-selected')?.dataset.bssUnit||'in';
-      const calculator=renderCalculator(chart,root,unit,()=>table.scrollIntoView({block:'nearest',behavior:'smooth'}));table.before(calculator);
-      emit('guide_opened',root,chart);
+      if(layer.hidden){delete layer.dataset.bssV12View;continue;}
+      const content=layer.querySelector('[data-bss-content]');
+      // Idempotent for approved AND unapproved charts. A newly rebuilt
+      // content node is independently eligible for a fresh enhancement.
+      if(!content || (content.dataset.bssV12Initialized==='true' && content.querySelector('.bss-v12-chart-navigation')))continue;
+      const root=layerOwner.get(layer)||layer.closest('.bss-v12-quick-root')||doc.querySelector('[data-bss-v9-root]');
+      if(!root)continue;
+      const chart=readChart(root);
+      if(!chart||!Array.isArray(chart.rows))continue;
+      enhanceLayer(layer,root,chart);
     }
   }
   // Reuse the actual chart JSON already rendered on the product page by the
   // existing Size Studio Liquid app block. No app proxy or Render/Neon request.
   // A product page is fetched only when its quick-view size guide is opened.
-  const QUICKVIEWS='quick-add-modal,.quick-add-modal,[data-quick-view],.quick-view,[id*="QuickView"],[id*="quick-view"],.quickview,[class*="quick-view"]';
+  const QUICKVIEWS='quick-add-modal,.quick-add-modal,[data-quick-view],[data-quickview],.quick-view,.quickview,.quickview-modal,.quick-shop,.quickshop,[id*="QuickView"],[id*="Quickview"],[id*="quick-view"],[id*="quickview"],[class*="quick-view"],[class*="quickview"]';
   const chartCache=new Map();
   const VALID_HANDLE=/^[a-z0-9][a-z0-9-]{0,199}$/;
   const fromURL=value=>{
@@ -169,20 +310,34 @@
   };
   function handleFrom(container) {
     if(!container)return null;
-    // Prefer explicit product context or product-title URL; never infer from text.
-    const contexts=[container,...container.querySelectorAll('[data-product-handle],[data-handle],[data-product-url]')].slice(0,20);
-    for(const context of contexts){
-      for(const value of [context.dataset?.productHandle,context.dataset?.handle]){
-        if(VALID_HANDLE.test(value||''))return value;
-      }
-      const url=fromURL(context.dataset?.productUrl);
-      if(url)return url;
+    // A main-product handle on the drawer itself has highest priority.
+    for(const value of [container.dataset?.productHandle,container.dataset?.handle]){
+      if(VALID_HANDLE.test(value||''))return value;
     }
-    for(const link of container.querySelectorAll('.product__title a[href*="/products/"],.product-title a[href*="/products/"],[data-product-title] a[href*="/products/"]')){
+    const own=fromURL(container.dataset?.productUrl);
+    if(own)return own;
+    // Primary "View full details" link, never a matching-set cross-sell.
+    for(const link of container.querySelectorAll('a[href*="/products/"]')){
+      if(/view\s*(?:full\s*)?(?:details|product)|product\s*details/i.test(link.textContent?.trim()||'') ||
+         link.matches('[data-product-details-link],.quick-view__view-details,.quickview__view-details,.product__view-details')){
+        const handle=fromURL(link.getAttribute('href'));
+        if(handle)return handle;
+      }
+    }
+    for(const link of container.querySelectorAll('.product__title a[href*="/products/"],.product-title a[href*="/products/"],[data-product-title] a[href*="/products/"],.qv-product-title a[href*="/products/"]')){
       const handle=fromURL(link.getAttribute('href'));
       if(handle)return handle;
     }
-    // A drawer can contain cross-sell links. Refuse to guess when ambiguous.
+    // Nested data handles are only trusted if unique; they may be related products.
+    const options=new Set();
+    for(const context of Array.from(container.querySelectorAll('[data-product-handle],[data-handle],[data-product-url]')).slice(0,30)){
+      for(const value of [context.dataset?.productHandle,context.dataset?.handle]){
+        if(VALID_HANDLE.test(value||''))options.add(value);
+      }
+      const url=fromURL(context.dataset?.productUrl);
+      if(url)options.add(url);
+    }
+    if(options.size===1)return [...options][0];
     const handles=new Set();
     for(const link of Array.from(container.querySelectorAll('a[href*="/products/"]')).slice(0,40)){
       const handle=fromURL(link.getAttribute('href'));
@@ -210,12 +365,14 @@
   function scanQuickviews(){
     const config=settings();if(!config||config.dataset.bssQuickview!=='true')return;
     for(const panel of Array.from(doc.querySelectorAll(QUICKVIEWS)).slice(0,24)){
-      if(panel.closest('[data-bss-layer]'))continue;
+      if(panel.closest('[data-bss-layer]')||panel.parentElement?.closest(QUICKVIEWS))continue;
       const slot=locateSizeRow(panel);if(!slot)continue;
       const handle=handleFrom(panel);
       let trigger=panel.querySelector('[data-bss-v12-quick-trigger]');
       if(trigger){
-        if(handle&&handle!==trigger.dataset.bssProductHandle)trigger.dataset.bssProductHandle=handle;
+        if(!handle){trigger.remove();panel.removeAttribute('data-bss-v12-owns-quickview');continue;}
+        if(handle!==trigger.dataset.bssProductHandle)trigger.dataset.bssProductHandle=handle;
+        panel.setAttribute('data-bss-v12-owns-quickview','true');
         continue;
       }
       if(!handle)continue; // No reliable product context => no incorrect chart.
@@ -223,6 +380,7 @@
       trigger.type='button';trigger.dataset.bssV12QuickTrigger='true';
       trigger.dataset.bssProductHandle=handle;
       trigger.setAttribute('aria-haspopup','dialog');
+      panel.setAttribute('data-bss-v12-owns-quickview','true');
       if(slot.insert==='before')slot.target.before(trigger);
       else if(slot.insert==='after')slot.target.after(trigger);
       else slot.target.prepend(trigger);
@@ -237,15 +395,15 @@
     const url=new URL(localeRoot.replace(/\/?$/,'/')+'products/'+encodeURIComponent(handle),location.origin);
     if(url.origin!==location.origin)throw Error('Unexpected product origin');
     const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),6500);
+    const timeout=setTimeout(()=>controller.abort(),8000);
     let html;
     try{
       const response=await fetch(url.toString(),{credentials:'same-origin',headers:{Accept:'text/html'},signal:controller.signal});
       if(!response.ok||new URL(response.url).origin!==location.origin)throw Error('Product page unavailable');
       const size=Number(response.headers.get('content-length')||0);
-      if(size>3*1024*1024)throw Error('Product page exceeds safe read size');
+      if(size>8*1024*1024)throw Error('Product page exceeds safe read size');
       html=await response.text();
-      if(html.length>3*1024*1024)throw Error('Product page exceeds safe read size');
+      if(html.length>8*1024*1024)throw Error('Product page exceeds safe read size');
     }finally{clearTimeout(timeout)}
     const page=new DOMParser().parseFromString(html,'text/html');
     const chartNode=page.querySelector('[data-bss-v9-root][data-bss-json]');
@@ -259,37 +417,83 @@
     if(chartCache.size>80)chartCache.delete(chartCache.keys().next().value);
     return data;
   }
-  async function quickviewClick(button){
+  function reportQuickviewError(button,handle){
+    const row=button.parentElement||button;
+    row.querySelector('.bss-v12-quick-error')?.remove();
+    const notice=create('span','bss-v12-quick-error');notice.setAttribute('role','status');
+    notice.append('Size guide unavailable here. ');
+    if(handle&&VALID_HANDLE.test(handle)){
+      const link=create('a','','Open product page');
+      link.href=(global.Shopify?.routes?.root||'/').replace(/\/?$/,'/')+'products/'+handle;
+      notice.append(link);
+    }
+    row.append(notice);
+  }
+  async function quickviewClick(button,explicitHandle){
     if(button.disabled)return;
-    // Re-read the active product at click time in case the drawer was reused.
+    // Re-read the active main product at click time, never a matching-set item.
     const drawer=button.closest(QUICKVIEWS);
     const current=handleFrom(drawer);
-    const handle=current||button.dataset.bssProductHandle;
-    if(!handle||!VALID_HANDLE.test(handle))return;
+    const handle=current||explicitHandle||button.dataset.bssProductHandle;
+    if(!handle||!VALID_HANDLE.test(handle)){reportQuickviewError(button,null);return;}
     button.disabled=true;
+    button.setAttribute('aria-busy','true');
     try{
       const data=await loadStorefrontChart(handle);
-      if(!button.isConnected)return; // Drawer was closed/replaced during request.
+      if(!button.isConnected)return;
       const now=handleFrom(button.closest(QUICKVIEWS));
-      if(now&&now!==handle)return; // Prevent a stale chart after product switch.
+      if(now&&now!==handle)return;
+      rowErrorClear(button);
       popup(data,button);
-    }catch(_err){
-      button.title='Size guide unavailable. Please open the product page.';
-      button.setAttribute('aria-label','Size guide unavailable. Open the product page.');
-    }finally{button.disabled=false}
+    }catch(err){
+      // A missing PDP app block or network failure must never be a silent click.
+      console.warn('[Size Studio] Quick View chart unavailable:',err?.message||'lookup failed');
+      reportQuickviewError(button,handle);
+    }finally{button.disabled=false;button.removeAttribute('aria-busy')}
   }
+  function rowErrorClear(button){button.parentElement?.querySelector('.bss-v12-quick-error')?.remove()}
   function popup(data,opener){
-    const root=create('div','bss');root.dataset.bssHandle=data.chartHandle||'';root.dataset.bssProductId=data.productId||'';root.dataset.bssProductHandle=data.handle||'';root.dataset.bssQuickView='true';
-    const layer=create('div','bss__layer');layer.dataset.bssMode='modal';
-    const scrim=create('div','bss__scrim');const panel=create('section','bss__panel');panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.tabIndex=-1;
-    const head=create('div','bss__head');head.append(create('h2','bss__heading',data.title||'Size guide'));
+    const root=create('div','bss bss-v12-quick-root');
+    root.dataset.bssHandle=data.chartHandle||'';root.dataset.bssProductId=data.productId||'';
+    root.dataset.bssProductHandle=data.handle||'';root.dataset.bssQuickView='true';
+    const layer=create('div','bss__layer');layer.dataset.bssMode='modal';layer.setAttribute('data-bss-layer','');
+    const scrim=create('div','bss__scrim');
+    const panel=create('section','bss__panel');panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.tabIndex=-1;
+    const head=create('div','bss__head');
+    const title=create('h2','bss__heading',data.title||'Size guide');title.id='bss-v12-quick-title-'+Math.random().toString(36).slice(2);
+    panel.setAttribute('aria-labelledby',title.id);head.append(title);
     const close=create('button','bss__close','×');close.type='button';close.setAttribute('aria-label','Close size guide');head.append(close);
-    const content=create('div','bss__content');
-    const units=create('div','bss-v12-simple-units');const chartContent=create('div');let selected='in';
-    function paintTable(){chartContent.replaceChildren();const table=create('table','bss__table');const tr=create('tr');for(const label of data.chart.columns)tr.append(create('th','',label));const thead=create('thead');thead.append(tr);table.append(thead);const tbody=create('tbody');for(const values of data.chart.rows){const row=create('tr');values.forEach((v,i)=>{let shown=String(v||'');if(i&&selected!==data.chart.unit){shown=shown.replace(/\d+(?:\.\d+)?/g,t=>String(Number((Number(t)*(selected==='cm'?2.54:1/2.54)).toFixed(1))))}row.append(create(i?'td':'th','',shown))});tbody.append(row)}table.append(tbody);chartContent.append(table)}
-    for(const u of ['in','cm']){const b=create('button','',''+u.toUpperCase());b.type='button';b.addEventListener('click',()=>{selected=u;paintTable()});units.append(b)}
-    const scroller=create('div','bss__table-scroll');scroller.append(chartContent);paintTable();
-    // Quick View must show the same True to Fit information as the PDP.
+    const content=create('div','bss__content');content.setAttribute('data-bss-content','');
+    const unitRow=create('div','bss__units-row'),units=create('div','bss__units');
+    units.setAttribute('role','group');units.setAttribute('aria-label','Size chart units');
+    const chartContent=create('div');let selected='in';
+    function paintTable(){
+      chartContent.replaceChildren();const table=create('table','bss__table');const tr=create('tr');
+      for(const label of data.chart.columns)tr.append(create('th','',label));
+      const thead=create('thead');thead.append(tr);table.append(thead);
+      const tbody=create('tbody');
+      for(const values of data.chart.rows){
+        const row=create('tr');values.forEach((v,i)=>{
+          let shown=String(v??'');
+          if(i&&selected!==data.chart.unit)shown=shown.replace(/\d+(?:\.\d+)?/g,t=>String(Number((Number(t)*(selected==='cm'?2.54:1/2.54)).toFixed(1))));
+          row.append(create(i?'td':'th','',shown));
+        });tbody.append(row);
+      }
+      table.append(tbody);chartContent.append(table);
+    }
+    for(const u of ['in','cm']){
+      const b=create('button',u===selected?'is-selected':'',u.toUpperCase());b.type='button';b.dataset.bssUnit=u;
+      b.setAttribute('aria-pressed',String(u===selected));
+      b.addEventListener('click',()=>{
+        selected=u;
+        for(const button of units.querySelectorAll('button')){
+          button.classList.toggle('is-selected',button.dataset.bssUnit===u);
+          button.setAttribute('aria-pressed',String(button.dataset.bssUnit===u));
+        }
+        paintTable();
+      });units.append(b);
+    }
+    unitRow.append(units);content.append(unitRow);
     const fitRating=data.chart?.fitScale;
     if(Number.isInteger(fitRating)&&fitRating>=1&&fitRating<=5){
       const fit=create('div','bss__fit-scale');fit.setAttribute('role','img');fit.setAttribute('aria-label',`Fit rating ${fitRating} of 5: ${labels[fitRating-1]}`);
@@ -300,18 +504,45 @@
       for(const text of ['Runs Small','True to Size','Runs Large'])captions.append(create('span','',text));
       fit.append(captions);content.append(fit);
     }
-    const support=supportBar(data.chart);if(support)content.append(support);
-    content.append(renderCalculator(data.chart,root,'in',()=>scroller.scrollIntoView({block:'nearest'})),units,scroller);
+    const scroller=create('div','bss__table-scroll');scroller.append(chartContent);paintTable();content.append(scroller);
     panel.append(head,content);layer.append(scrim,panel);root.append(layer);doc.body.append(root);
-    const prev=doc.activeElement;const overflow=doc.body.style.overflow;doc.body.style.overflow='hidden';panel.focus();emit('guide_opened',root,data.chart);
+    enhanceLayer(layer,root,data.chart);
+    const prev=doc.activeElement;const overflow=doc.body.style.overflow;
+    doc.body.style.overflow='hidden';panel.focus();
     function dismiss(){doc.removeEventListener('keydown',keys,true);root.remove();doc.body.style.overflow=overflow;(prev?.isConnected?prev:opener)?.focus()}
-    function keys(e){if(e.key==='Escape'){e.preventDefault();dismiss()}if(e.key==='Tab'){const els=[...panel.querySelectorAll('button:not([disabled]), input:not([disabled])')];if(els.length){const a=els[0],z=els[els.length-1];if(e.shiftKey&&doc.activeElement===a){e.preventDefault();z.focus()}else if(!e.shiftKey&&doc.activeElement===z){e.preventDefault();a.focus()}}}}
+    function keys(e){
+      if(e.key==='Escape'){e.preventDefault();dismiss();return;}
+      if(e.key!=='Tab')return;
+      const els=[...panel.querySelectorAll('button:not([disabled]), input:not([disabled])')].filter(x=>x.getClientRects().length);
+      if(els.length){const a=els[0],z=els[els.length-1];
+        if(e.shiftKey&&doc.activeElement===a){e.preventDefault();z.focus();}
+        else if(!e.shiftKey&&doc.activeElement===z){e.preventDefault();a.focus();}
+      }
+    }
     scrim.addEventListener('click',dismiss);close.addEventListener('click',dismiss);doc.addEventListener('keydown',keys,true);
   }
   let raf=0;
   function scan(){scanLayers();scanQuickviews()}
   function schedule(){if(raf)return;raf=requestAnimationFrame(()=>{raf=0;scan()})}
-  doc.addEventListener('click',e=>{const el=e.target?.closest?.('[data-bss-v12-quick-trigger]');if(el){e.preventDefault();e.stopPropagation();quickviewClick(el)}},true);
+  // The V10 PDP script listens for .bss-v9-trigger on document capture.
+  // An earlier window-capture handler can prevent it from incorrectly opening
+  // a PDP chart when a legacy Quick View trigger is clicked.
+  global.addEventListener('click',e=>{
+    const el=e.target?.closest?.('[data-bss-v12-quick-trigger],.bss-v9-trigger');
+    if(!el)return;
+    const drawer=el.closest(QUICKVIEWS);
+    if(!drawer && !el.matches('[data-bss-v12-quick-trigger]'))return;
+    // Never hijack the normal product-page Size Studio link.
+    if(!drawer)return;
+    const handle=handleFrom(drawer)||el.dataset.bssProductHandle;
+    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+    quickviewClick(el,handle);
+  },true);
+  doc.addEventListener('click',e=>{
+    const el=e.target?.closest?.('[data-bss-v12-quick-trigger]');
+    if(!el)return;
+    e.preventDefault();e.stopPropagation();quickviewClick(el);
+  },true);
   function init(){scan();const observer=new MutationObserver(records=>{if(records.some(r=>r.addedNodes.length||r.removedNodes.length))schedule()});observer.observe(doc.body,{subtree:true,childList:true});doc.addEventListener('shopify:section:load',schedule)}
   if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })(typeof window!=='undefined'?window:globalThis);
