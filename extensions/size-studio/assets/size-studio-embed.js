@@ -87,6 +87,24 @@
       units.appendChild(button);
     }
     unitsRow.appendChild(units);content.appendChild(unitsRow);
+    // BSS_V11_3_2_SIMPLE_FIT_SCALE — product/fit information only, never a size recommendation.
+    // Older charts have no rating and therefore show nothing here.
+    const fitRating = Number(chart.fitScale);
+    if (chart.fitScale !== undefined && Number.isInteger(fitRating) && fitRating >= 1 && fitRating <= 5) {
+      const fitDescriptions = ['Runs small','Runs slightly small','True to size','Runs slightly large','Runs large'];
+      const scale = make('div', 'bss__fit-scale');
+      scale.setAttribute('role', 'img');
+      scale.setAttribute('aria-label', `Fit rating ${fitRating} of 5: ${fitDescriptions[fitRating - 1]}`);
+      const track = make('div', 'bss__fit-track');
+      track.setAttribute('aria-hidden', 'true');
+      for (let i=1; i<=5; i++) track.appendChild(make('span', i===fitRating ? 'bss__fit-segment is-active' : 'bss__fit-segment'));
+      scale.appendChild(track);
+      const labels = make('div', 'bss__fit-labels');
+      labels.setAttribute('aria-hidden','true');
+      for (const caption of ['Runs Small','True to Size','Runs Large']) labels.appendChild(make('span','',caption));
+      scale.appendChild(labels);
+      content.appendChild(scale);
+    }
     const scroller = make('div','bss__table-scroll');
     scroller.setAttribute('role','region');scroller.setAttribute('aria-label','Size measurements');scroller.tabIndex=0;
     const table = make('table','bss__table');

@@ -104,3 +104,14 @@
   .bss__table tbody th:first-child{position:sticky;left:0;z-index:1;background:var(--bss-panel-bg)}
 }
 @media(prefers-reduced-motion:reduce){.bss__panel{animation:none!important}}
+
+/* BSS_V11_3_2_SIMPLE_FIT_SCALE — shown directly below IN/CM; hidden when unrated. */
+.bss__units-row:has(+ .bss__fit-scale){margin-bottom:9px}
+.bss__fit-scale{width:100%;max-width:620px;margin:0 auto 20px;color:var(--bss-text,#033C4F)}
+.bss__fit-track{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;width:100%;height:7px}
+.bss__fit-segment{min-width:0;background:var(--bss-separator,#e1e8e9)}
+.bss__fit-segment.is-active{background:#033C4F}
+.bss__fit-labels{display:flex;justify-content:space-between;gap:8px;margin-top:10px;font-size:11px;line-height:1.25;font-weight:550;color:var(--bss-muted,#627980)}
+.bss__fit-labels span:nth-child(2){text-align:center}
+.bss__fit-labels span:last-child{text-align:right}
+@media(max-width:600px){.bss__fit-scale{margin:0 auto 16px}.bss__fit-labels{font-size:10px}}

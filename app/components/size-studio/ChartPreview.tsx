@@ -18,6 +18,14 @@ export function ChartPreview({ draft, productTitle }: ChartPreviewProps) {
       <span aria-hidden="true">/</span>
       <button type="button" aria-pressed={unit === 'cm'} className={unit === 'cm' ? 'active' : ''} onClick={() => setUnit('cm')}>CM</button>
     </div>
+    {Number.isInteger(draft.data.fitScale) && Number(draft.data.fitScale) >= 1 && Number(draft.data.fitScale) <= 5 && (
+      <div className="bs-v11-fit-visual" role="img" aria-label={`Fit rating ${draft.data.fitScale} of 5: ${['Runs small','Runs slightly small','True to size','Runs slightly large','Runs large'][Number(draft.data.fitScale) - 1]}`}>
+        <div className="bs-v11-fit-track" aria-hidden="true">
+          {[1, 2, 3, 4, 5].map((value) => <span key={value} className={'bs-v11-fit-segment' + (value === draft.data.fitScale ? ' is-active' : '')} />)}
+        </div>
+        <div className="bs-v11-fit-labels" aria-hidden="true"><span>Runs Small</span><span>True to Size</span><span>Runs Large</span></div>
+      </div>
+    )}
     <div className="bs-v11-table-scroll" tabIndex={0} role="region" aria-label="Preview measurements (scroll if needed)">
       <table className="bs-v11-table preview"><thead><tr>{draft.data.columns.map((column, i) => <th scope="col" key={i}>{column || 'Measurement'}</th>)}</tr></thead>
         <tbody>{draft.data.rows.map((row, r) => <tr key={r}>{row.map((cell, c) => c === 0
