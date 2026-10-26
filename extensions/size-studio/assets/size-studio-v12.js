@@ -1,9 +1,9 @@
-/* BirdEye Size Studio V12.0.5 – stable modal, chart-first, verified-body calculator, global quick view. */
+/* BirdEye Size Studio V12.1.0 – minimal best-match result. */
 (function (global) {
   'use strict';
   if (global.__BSS_V12_LOADED__) return;
   global.__BSS_V12_LOADED__ = true;
-  global.__BSS_V12_BUILD__ = '12.0.5';
+  global.__BSS_V12_BUILD__ = '12.1.0';
   const toInches = (n, unit) => unit === 'cm' ? n / 2.54 : n;
   const display = (s) => String(s ?? '').trim();
   const labels = ['Runs small','Runs slightly small','True to size','Runs slightly large','Runs large'];
@@ -33,47 +33,75 @@
     }
     return found;
   }
+  // Compare actual measurements to every available size, never infer a range
+  // from Fit/Support/Compression ratings. Approved body charts only.
   function estimate(chart, values, inputUnit) {
-    if (!chart || !Array.isArray(chart.rows) || !Array.isArray(chart.columns)) return { type:'unavailable', reason:'Missing chart.' };
-    if (chart.recommendationBasis !== 'body') return { type:'unverified', reason:'Body-measurement ranges have not been approved for this chart.' };
-    const dims = fields(chart);
-    if (!dims.length) return { type:'unavailable', reason:'This chart has no supported body-measurement columns.' };
-    const input = {};
-    for (const d of dims) {
-      const raw = values?.[d.key];
-      if (raw === '' || raw === null || raw === undefined) return {type:'incomplete', missing:d.key};
-      const n = Number(raw);
-      if (!Number.isFinite(n) || n <= 0 || n > (inputUnit === 'cm' ? 300 : 120)) return {type:'invalid', field:d.key};
-      input[d.key] = toInches(n, inputUnit);
+    if (!chart || !Array.isArray(chart.rows) || !Array.isArray(chart.columns)) return {type:'unavailable',reason:'Missing chart.'};
+    if (chart.recommendationBasis !== 'body') return {type:'unverified',reason:'Body-measurement ranges are not yet approved.'};
+    const dims=fields(chart);
+    if (!dims.length) return {type:'unavailable',reason:'No supported body-measurement columns.'};
+    const measurements={};
+    for(const d of dims){
+      const raw=values?.[d.key];
+      if(raw===''||raw===undefined||raw===null)return {type:'incomplete',missing:d.key};
+      const n=Number(raw);
+      if(!Number.isFinite(n)||n<=0||n>(inputUnit==='cm'?300:120))return {type:'invalid',field:d.key};
+      measurements[d.key]=toInches(n,inputUnit);
     }
-    const chartUnit = chart.unit === 'cm' ? 'cm' : 'in';
-    const options = [];
-    for (const row of chart.rows) {
-      if (!Array.isArray(row) || !display(row[0])) continue;
-      const distances = [];
-      const valid = [];
-      for (const d of dims) {
-        const bounds = interval(row[d.index]);
-        if (!bounds) {valid.push(false);continue;}
-        const a = toInches(bounds[0], chartUnit), b = toInches(bounds[1], chartUnit);
-        const n = input[d.key];
-        valid.push(n >= a - 1e-7 && n <= b + 1e-7);
-        distances.push(Math.abs(n - (a + b) / 2) / Math.max(1, b - a));
+    const chartUnit=chart.unit==='cm'?'cm':'in';
+    const weights=Object.fromEntries(dims.map(d=>[d.key,dims.length===1?1:
+      (dims.some(x=>x.key==='waist')&&dims.some(x=>x.key==='hips')?(d.key==='waist'?.6:.4):
+      (dims.some(x=>x.key==='underbust')?(d.key==='underbust'?.6:.4):1/dims.length))]));
+    const options=[];
+    for(const row of chart.rows){
+      if(!Array.isArray(row)||!display(row[0]))continue;
+      const comparisons=[];
+      for(const d of dims){
+        const raw=interval(row[d.index]);
+        if(!raw){comparisons.length=0;break;} // incomplete sizes are never candidates
+        const [lo,hi]=raw.map(n=>toInches(n,chartUnit));
+        const actual=measurements[d.key];
+        const offset=actual<lo?lo-actual:actual>hi?actual-hi:0;
+        const normalized=offset/Math.max(1,hi-lo);
+        comparisons.push({key:d.key,label:display(d.label),actual,lo,hi,inside:offset<=1e-7,offset,normalized,
+          weight:weights[d.key]||1/dims.length});
       }
-      options.push({size: display(row[0]), fits:valid.every(Boolean), matches:valid.reduce((s,x)=>s+Number(x),0), score:distances.reduce((s,x)=>s+x,0)/Math.max(1,dims.length)});
+      if(comparisons.length!==dims.length)continue;
+      const fit=comparisons.every(c=>c.inside);
+      const penalty=comparisons.reduce((t,c)=>t+c.normalized*c.weight,0);
+      const midpoint=comparisons.reduce((t,c)=>t+c.weight*Math.abs(c.actual-(c.lo+c.hi)/2)/Math.max(1,c.hi-c.lo),0);
+      options.push({size:display(row[0]),comparisons,fit,penalty,midpoint});
     }
-    if (!options.length) return {type:'unavailable',reason:'No size rows are available.'};
-    const matches = options.filter(x => x.fits).sort((a,b) => a.score - b.score);
-    if (matches.length) {
-      const tie = matches.length > 1 && Math.abs(matches[0].score-matches[1].score) < 0.08;
-      return { type:tie?'between_sizes':'recommended', size:matches[0].size, alternate:tie?matches[1].size:null, matches:matches.map(x=>x.size) };
-    }
-    // Conflicting dimensions: surface alternatives without pretending there is an exact fit.
-    const partial = options.filter(x=>x.matches>0).sort((a,b)=>b.matches-a.matches || a.score-b.score);
-    if (dims.length > 1 && partial.length) return {type:'between_sizes',size:partial[0].size,alternate:partial.find(x=>x.size!==partial[0].size)?.size || null, matches:[],reason:'Your measurements fall into different size ranges.'};
-    return {type:'no_match',reason:'No verified size range contains your measurements.'};
+    if(!options.length)return {type:'unavailable',reason:'No complete size ranges are available.'};
+    // Prefer a size containing all measurements. When none does, rank nearest
+    // available ranges by weighted amount outside each dimension's interval.
+    options.sort((a,b)=>Number(b.fit)-Number(a.fit)||a.penalty-b.penalty||a.midpoint-b.midpoint||a.size.localeCompare(b.size));
+    const winner=options[0];
+    return {type:winner.fit?'recommended':'best_match',size:winner.size,
+      alternate:null,comparisons:winner.comparisons,
+      reason:winner.fit?'All required measurements fall within this size range.':
+       'This is the closest available size based on the measurements you entered.',
+      exact:winner.fit};
   }
-  const api={interval,dimension,fields,estimate,labels,supportLabels};
+  function formatMeasurement(n,unit){return unit==='cm'?String(Math.round(n*2.54)):String(Number(n.toFixed(1)))}
+  function describeOutcome(outcome,unit){
+    if(!outcome?.comparisons?.length)return 'Compare your measurements with the size chart.';
+    const within=outcome.comparisons.filter(c=>c.inside);
+    const outside=outcome.comparisons.filter(c=>!c.inside);
+    const names=within.map(c=>c.label.toLowerCase()).join(' and ');
+    if(!outside.length)return `Your ${names} ${within.length===1?'falls':'fall'} within this size’s approved measurement range.`;
+    const deviations=outside.map(c=>`${c.label.toLowerCase()} is ${c.actual<c.lo?'below':'above'} the listed ${outcome.size} range`);
+    const expected=outside.map(c=>`${c.label.toLowerCase()} may feel ${c.actual<c.lo?'looser':'snugger'}`).join('; ');
+    return `${within.length?`Your ${names} ${within.length===1?'fits':'fit'} ${outcome.size}. `:''}Your ${deviations.join(' and ')}. ${expected.charAt(0).toUpperCase()+expected.slice(1)}. Check the chart if you prefer a different fit.`;
+  }
+  function convertChartValue(value,sourceUnit,targetUnit){
+    const text=String(value??'');
+    if(targetUnit==='in'&&sourceUnit!=='cm')return text;
+    if(targetUnit==='cm'&&sourceUnit==='cm')return text.replace(/\d+(?:\.\d+)?/g,v=>String(Math.round(Number(v))));
+    const multiplier=targetUnit==='cm'?2.54:1/2.54;
+    return text.replace(/\d+(?:\.\d+)?/g,v=>targetUnit==='cm'?String(Math.round(Number(v)*multiplier)):String(Number((Number(v)*multiplier).toFixed(1))));
+  }
+  const api={interval,dimension,fields,estimate,labels,supportLabels,convertChartValue,describeOutcome};
   global.BirdEyeSizeStudioV12 = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof document === 'undefined') return;
@@ -148,9 +176,8 @@
     }else {figure.hidden=true;content.classList.add('bss-v12-no-image');}
     const form=create('form','bss-v12-form');form.noValidate=true;
     const header=create('div','bss-v12-calculator-head');
-    header.append(create('h3','','Find My Size'));
+    header.append(create('h3','','Add your measurements'));
     const approved=chart?.recommendationBasis==='body';
-    header.append(create('p','',approved?'Enter your measurements to find your fit.':'Explore the fit details for this style.'));
     form.append(header);
     const selectedUnit=create('div','bss-v12-unit-choice');
     selectedUnit.setAttribute('role','group');selectedUnit.setAttribute('aria-label','Measurement units');
@@ -166,20 +193,17 @@
         if(measureUnit===name)return;
         for(const field of Object.values(measurements)){
           if(field.value){const v=Number(field.value);
-            if(Number.isFinite(v))field.value=String(Number((v*(name==='cm'?2.54:1/2.54)).toFixed(2)));
+            if(Number.isFinite(v))field.value=name==='cm'?String(Math.round(v*2.54)):String(Number((v/2.54).toFixed(1)));
           }
         }
-        measureUnit=name;repaintUnits();
+        measureUnit=name;repaintUnits();result.replaceChildren();
         for(const el of form.querySelectorAll('.bss-v12-unit'))el.textContent=measureUnit.toUpperCase();
       });
       selectedUnit.append(b);
     }
     repaintUnits();form.append(selectedUnit);
-    const insights=create('div','bss-v12-insights');
-    const fit=fitBar(chart),support=compactSupportBar(chart);
-    if(fit)insights.append(fit);
-    if(support)insights.append(support);
-    if(insights.childElementCount)form.append(insights);
+    // Fit and Support/Compression are visible in Size Chart mode. Keep the
+    // reference-led measurement form uncluttered, and the result text-only.
     const dims=fields(chart);
     const result=create('div','bss-v12-result');result.setAttribute('aria-live','polite');
     if(approved&&dims.length){
@@ -188,18 +212,43 @@
         const wrapper=create('label','bss-v12-field');wrapper.append(create('span','',dim.label));
         const input=create('input');input.type='number';input.min='1';input.max='300';input.step='any';
         input.inputMode='decimal';input.autocomplete='off';input.placeholder='Enter measurement';
-        input.setAttribute('aria-label',dim.label);measurements[dim.key]=input;
+        input.setAttribute('aria-label',dim.label);input.addEventListener('input',()=>result.replaceChildren());measurements[dim.key]=input;
         wrapper.append(input,create('span','bss-v12-unit',measureUnit.toUpperCase()));inputArea.append(wrapper);
       }
       form.append(inputArea);
     }
+    // Helpers sit above the primary action, as in the approved reference.
     const actions=create('div','bss-v12-actions');
-    const btn=create('button','bss-v12-submit','Calculate my size');btn.type='submit';
-    if(approved&&dims.length)actions.append(btn);
-    const chartBtn=create('button','bss-v12-secondary','View size chart');chartBtn.type='button';
+    const helpers=create('div','bss-v12-helpers');
+    const helpBtn=create('button','bss-v12-helper','How to measure');helpBtn.type='button';
+    helpBtn.setAttribute('aria-expanded','false');
+    const help=create('div','bss-v12-measure-help');help.hidden=true;
+    help.setAttribute('role','note');
+    const guidance={
+      bust:'Measure around the fullest part of your bust, keeping the tape level.',
+      underbust:'Measure directly below your bust, keeping the tape comfortably snug.',
+      waist:'Measure your natural waist, without pulling the tape tight.',
+      hips:'Measure around the fullest part of your hips, keeping the tape level.'
+    };
+    for(const d of dims){
+      const sentence=guidance[d.key];if(!sentence)continue;
+      const p=create('p','');p.append(create('strong','',d.label+': '),doc.createTextNode(sentence));help.append(p);
+    }
+    helpBtn.addEventListener('click',()=>{
+      help.hidden=!help.hidden;helpBtn.setAttribute('aria-expanded',String(!help.hidden));
+    });
+    helpers.append(helpBtn);
+    const chartBtn=create('button','bss-v12-helper','View size chart');chartBtn.type='button';
     chartBtn.addEventListener('click',()=>onChart?.());
-    if(!approved||!dims.length)chartBtn.classList.add('is-primary');
-    actions.append(chartBtn);form.append(actions);
+    helpers.append(chartBtn);actions.append(helpers,help);
+    const submitRow=create('div','bss-v12-primary-row');
+    const btn=create('button','bss-v12-submit','Calculate my size');btn.type='submit';
+    if(approved&&dims.length)submitRow.append(btn);
+    if(!approved||!dims.length){
+      const fallback=create('button','bss-v12-submit','View size chart');fallback.type='button';
+      fallback.addEventListener('click',()=>onChart?.());submitRow.append(fallback);
+    }
+    actions.append(submitRow);form.append(actions);
     if(!approved){
       const note=create('p','bss-v12-caution','Personalised size recommendations are being verified for this style. View the size chart for current measurements.');
       form.append(note);
@@ -215,15 +264,18 @@
         result.append(create('p','bss-v12-caution','Please enter valid measurements in every field.'));
         measurements[outcome.missing||outcome.field]?.focus();return;
       }
-      const h=create('h4','',outcome.type==='recommended'?`Recommended size: ${outcome.size}`:outcome.type==='between_sizes'?`Between sizes${outcome.size?': '+outcome.size+(outcome.alternate?' / '+outcome.alternate:''):''}`:'No exact size match');
-      result.append(h);
-      const explanation=outcome.type==='recommended'?'Your measurements fall within this style’s approved body-size range.':outcome.type==='between_sizes'?(outcome.reason||'More than one size fits. Compare the measurements in the chart.'):(outcome.reason||'Check the measurements and review the size chart.');
-      result.append(create('p','',explanation));
-      if(outcome.type==='recommended'||outcome.type==='between_sizes'){
-        // The fit/support display is advisory only: do not silently shift a size.
-        if(fit)result.append(create('p','bss-v12-fit-note','Fit: '+labels[chart.fitScale-1]+'.'));
-        if(support)result.append(create('p','bss-v12-fit-note',barKind(chart)+': '+chart.supportLevel+' of 5.'));
+      if(outcome.size){
+        // One elegant result line. Keep inputs visible so the customer can edit
+        // and recalculate without an extra screen or edit button.
+        const line=create('p','bss-v12-best-match');
+        line.append(
+          create('span','bss-v12-best-match-label','Your Best Size Match: '),
+          create('strong','bss-v12-best-match-value',outcome.size)
+        );
+        result.append(line);
         emit('recommendation_generated',root,chart,outcome);
+      }else{
+        result.append(create('p','bss-v12-caution',outcome.reason||'Please review your measurements.'));
       }
     });
     form.append(result);content.append(figure,form);section.append(content);return section;
@@ -238,14 +290,15 @@
     const legacyFit=content.querySelector('.bss__fit-scale');
     const legacySupport=content.querySelector('.bss-v12-support');
     const navigation=content.querySelector('.bss-v12-chart-navigation');
-    for(const el of [calculator,table,originalUnits,legacyFit,legacySupport,navigation]){
+    for(const el of [calculator,table,originalUnits,legacyFit,legacySupport]){
       if(!el)continue;
       const isChartPart=el!==calculator;
       el.hidden=isChartPart?view!=='chart':view!=='calculator';
     }
+    if(navigation){for(const b of navigation.querySelectorAll('[data-bss-view-tab]')){const selected=b.dataset.bssViewTab===view;b.classList.toggle('is-active',selected);b.setAttribute('aria-selected',String(selected));}}
     if(focus){
       const panel=layer.querySelector('.bss__panel');if(panel)panel.scrollTop=0;
-      if(view==='chart')navigation?.querySelector('button')?.focus();
+      if(view==='chart')navigation?.querySelector('[data-bss-view-tab=chart]')?.focus();
       else (calculator?.querySelector('input')||calculator?.querySelector('.bss-v12-unit-choice button')||calculator?.querySelector('button'))?.focus();
     }
   }
@@ -261,13 +314,16 @@
     const bar=supportBar(chart);if(bar)table.before(bar);
     const unit=content.querySelector('[data-bss-unit].is-selected')?.dataset.bssUnit||'in';
     const navigation=create('div','bss-v12-chart-navigation');
-    navigation.append(create('h3','','Size chart'));
+    const tabs=create('div','bss-v12-tabs');tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Size guide views');
     const canRecommend=chart.recommendationBasis==='body' && fields(chart).length>0;
-    if(canRecommend){
-      const toCalculator=create('button','bss-v12-find','Find My Size');toCalculator.type='button';
-      toCalculator.addEventListener('click',()=>applyView(layer,'calculator'));
-      navigation.append(toCalculator);
+    for(const [mode,label] of [['chart','Size Chart'],['calculator','Find My Size']]){
+      const tab=create('button','bss-v12-tab',label);tab.type='button';tab.dataset.bssViewTab=mode;
+      tab.setAttribute('role','tab');
+      if(mode==='calculator'&&!canRecommend){tab.disabled=true;tab.title='Size recommendations are being verified for this style';}
+      else tab.addEventListener('click',()=>applyView(layer,mode));
+      tabs.append(tab);
     }
+    navigation.append(tabs);
     content.prepend(navigation);
     if(canRecommend){
       const calculator=renderCalculator(chart,root,unit,()=>applyView(layer,'chart'));
@@ -280,6 +336,24 @@
   }
   // Enhance legacy PDP size-guide modal without changing any of its existing chart/table handling.
   const layerOwner=new WeakMap();
+  // Legacy PDP chart table is rendered by the V10 embed, which otherwise shows
+  // one decimal for CM. Repaint only changed *measurement cells* from the
+  // original chart data, leaving headers/sizes intact and avoiding DOM loops.
+  function roundPdpTable(layer,chart){
+    const content=layer.querySelector('[data-bss-content]');
+    const table=content?.querySelector('.bss__table-scroll table');
+    const selected=content?.querySelector('.bss__units button.is-selected,[data-bss-unit].is-selected')?.dataset?.bssUnit;
+    if(!table||selected!=='cm'||!Array.isArray(chart?.rows))return;
+    const rows=table.querySelectorAll('tbody tr');
+    if(rows.length!==chart.rows.length)return;
+    for(let r=0;r<rows.length;r++){
+      const cells=rows[r].querySelectorAll('td');
+      for(let i=0;i<cells.length;i++){
+        const target=convertChartValue(chart.rows[r][i+1],chart.unit==='cm'?'cm':'in','cm');
+        if(cells[i].textContent!==target)cells[i].textContent=target;
+      }
+    }
+  }
   function scanLayers(){
     for(const root of doc.querySelectorAll('[data-bss-v9-root]')){
       const layer=root.querySelector('[data-bss-layer]');if(layer)layerOwner.set(layer,root);
@@ -289,12 +363,13 @@
       const content=layer.querySelector('[data-bss-content]');
       // Idempotent for approved AND unapproved charts. A newly rebuilt
       // content node is independently eligible for a fresh enhancement.
-      if(!content || (content.dataset.bssV12Initialized==='true' && content.querySelector('.bss-v12-chart-navigation')))continue;
+      if(!content)continue;
+      if(content.dataset.bssV12Initialized==='true' && content.querySelector('.bss-v12-chart-navigation')){const owner=layerOwner.get(layer)||layer.closest('.bss-v12-quick-root');const chart=owner&&readChart(owner);if(chart)roundPdpTable(layer,chart);continue;}
       const root=layerOwner.get(layer)||layer.closest('.bss-v12-quick-root')||doc.querySelector('[data-bss-v9-root]');
       if(!root)continue;
       const chart=readChart(root);
       if(!chart||!Array.isArray(chart.rows))continue;
-      enhanceLayer(layer,root,chart);
+      enhanceLayer(layer,root,chart);roundPdpTable(layer,chart);
     }
   }
   // Reuse the actual chart JSON already rendered on the product page by the
@@ -479,7 +554,7 @@
       for(const values of data.chart.rows){
         const row=create('tr');values.forEach((v,i)=>{
           let shown=String(v??'');
-          if(i&&selected!==data.chart.unit)shown=shown.replace(/\d+(?:\.\d+)?/g,t=>String(Number((Number(t)*(selected==='cm'?2.54:1/2.54)).toFixed(1))));
+          if(i)shown=convertChartValue(v,data.chart.unit==='cm'?'cm':'in',selected);
           row.append(create(i?'td':'th','',shown));
         });tbody.append(row);
       }

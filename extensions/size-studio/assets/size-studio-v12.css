@@ -168,3 +168,339 @@
 
 /* V12.0.7 — five-position Support or Compression indicator; independent of Fit. */
 .bss-v12-enhanced .bss-v12-support-track,.bss-v12-support-track{grid-template-columns:repeat(5,minmax(0,1fr));}
+
+/* V12.0.8 — centred, reference-led UI, no feature changes to Fit/Support. */
+.bss-v12-enhanced .bss-v12-chart-navigation,
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-chart-navigation,
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss-v12-chart-navigation{
+  display:flex!important;justify-content:center!important;align-items:center;
+  border:0;padding:5px 0 16px;margin:0 auto 12px!important;
+}
+.bss-v12-enhanced .bss-v12-tabs{
+  width:min(100%,540px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  padding:4px;gap:4px;border-radius:999px;background:#202426;
+}
+.bss-v12-enhanced .bss-v12-tab{
+  border:0;background:transparent;color:#e7e9e9;cursor:pointer;border-radius:999px;
+  min-height:42px;padding:10px 18px;font:inherit;font-size:13px;font-weight:620;
+  letter-spacing:0;line-height:1.25;text-align:center;transition:background-color .12s ease;
+}
+.bss-v12-enhanced .bss-v12-tab.is-active{background:#033c4f;color:white}
+.bss-v12-enhanced .bss-v12-tab:disabled{opacity:.55;cursor:not-allowed}
+.bss-v12-enhanced .bss-v12-tab:focus-visible{outline:2px solid #fff;outline-offset:-5px}
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss-v12-unit-choice{
+  display:flex;justify-content:center;align-items:center;gap:4px;
+  margin:4px auto 13px;width:100%;
+}
+.bss-v12-enhanced .bss-v12-calculator-head{margin-bottom:8px}
+.bss-v12-enhanced .bss-v12-calculator-head h3{font-size:clamp(21px,2vw,26px)}
+.bss-v12-enhanced .bss-v12-image{overflow:hidden;min-width:0;max-width:100%;box-sizing:border-box}
+.bss-v12-enhanced .bss-v12-image img,
+.bss-v12-enhanced .bss-v12-image picture,
+.bss-v12-enhanced .bss-v12-image img[src]{
+  display:block;width:100%;height:100%;max-width:100%;max-height:100%;
+  object-fit:contain!important;object-position:center center!important;
+}
+.bss-v12-enhanced .bss-v12-result:empty{display:none}
+.bss-v12-enhanced .bss-v12-result:not(:empty){
+  display:flex;flex-direction:column;align-items:flex-start;gap:10px;
+  background:#f3f7f8;border:1px solid #dae7e9;border-radius:13px;
+  padding:clamp(18px,2.5vw,28px);margin-top:15px;
+}
+.bss-v12-enhanced .bss-v12-result-heading{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.bss-v12-enhanced .bss-v12-result-eyebrow{font-size:10px;font-weight:750;letter-spacing:.1em;color:#46636c}
+.bss-v12-enhanced .bss-v12-size-badge{font-size:clamp(44px,5vw,64px);font-weight:730;line-height:1.08;color:#033c4f;letter-spacing:-.05em}
+.bss-v12-enhanced .bss-v12-result-summary{font-size:15px;line-height:1.45;font-weight:650;color:#083747;margin:0!important}
+.bss-v12-enhanced .bss-v12-result-explanation{font-size:12px;line-height:1.6;color:#50646b;margin:0!important}
+.bss-v12-enhanced .bss-v12-edit{font:inherit;font-size:12px;font-weight:600;color:#033c4f;background:none;border:0;padding:5px 0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.bss-v12-enhanced .bss-v12-calculator.has-result .bss-v12-inputs,
+.bss-v12-enhanced .bss-v12-calculator.has-result .bss-v12-actions{display:none}
+.bss-v12-enhanced .bss-v12-calculator.has-result .bss-v12-result{margin-top:20px}
+.bss-v12-enhanced .bss-v12-field{font-size:11px}
+.bss-v12-enhanced .bss-v12-field input{font-size:16px}
+@media (max-width:760px){
+ .bss-v12-enhanced .bss-v12-tab{font-size:12px;min-height:40px;padding:9px 10px}
+ .bss-v12-enhanced .bss-v12-image{height:170px;max-height:170px}
+ .bss-v12-enhanced .bss-v12-result:not(:empty){padding:16px}
+}
+@media(prefers-reduced-motion:reduce){.bss-v12-enhanced .bss-v12-tab{transition:none}}
+
+/* V12.0.9 – quiet, single-line size result. No card, no secondary copy. */
+.bss-v12-enhanced .bss-v12-result:not(:empty){
+  display:block; width:100%; margin:17px 0 0; padding:0;
+  border:0; border-radius:0; background:transparent; box-shadow:none;
+  color:#122f38; text-align:center;
+}
+.bss-v12-enhanced .bss-v12-best-match{
+  display:block;text-align:center;white-space:normal;
+  margin:0!important;padding:0;line-height:1.35;
+}
+.bss-v12-enhanced .bss-v12-best-match-label{
+  font:inherit;font-size:15px;font-weight:500;letter-spacing:0;color:#253e46;
+}
+.bss-v12-enhanced .bss-v12-best-match-value{
+  font:inherit;font-size:24px;font-weight:700;letter-spacing:-.035em;color:#033c4f;
+}
+@media(max-width:760px){
+  .bss-v12-enhanced .bss-v12-best-match-label{font-size:14px}
+  .bss-v12-enhanced .bss-v12-best-match-value{font-size:22px}
+}
+
+
+/* ==============================================================
+ * BIRD EYE SIZE STUDIO V12.1.0 — REFERENCE-LED FINAL PRESENTATION
+ * Strictly scoped to V12-enriched Size Studio. The earlier legacy
+ * declarations remain to preserve the old theme; these rules win.
+ * ============================================================= */
+.bss__layer.bss-v12-enhanced[data-bss-mode="modal"] {
+  padding:clamp(12px,2.5vh,28px)!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  box-sizing:border-box;
+}
+.bss__layer.bss-v12-enhanced[data-bss-mode="modal"] .bss__panel {
+  box-sizing:border-box!important;
+  width:min(1140px,calc(100vw - 48px))!important;
+  max-width:1140px!important;
+  max-height:calc(100dvh - 40px)!important;
+  min-height:0!important;
+  margin:auto!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  background:#fff!important;
+  border-radius:12px!important;
+  box-shadow:0 24px 65px rgba(0,0,0,.20)!important;
+}
+.bss-v12-enhanced .bss__head{
+  min-height:56px!important;padding:19px 65px 8px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+}
+.bss-v12-enhanced .bss__heading{
+  font-size:clamp(17px,1.42vw,21px)!important;
+  line-height:1.25!important;font-weight:720!important;
+  letter-spacing:.025em!important;text-transform:uppercase!important;
+  margin:0!important;text-align:center!important;color:#033c4f!important;
+}
+.bss-v12-enhanced .bss__close{top:13px!important;right:18px!important;z-index:3!important}
+.bss-v12-enhanced .bss__content{padding:0 clamp(24px,3.7vw,48px) 28px!important}
+/* Centered, equal-width dark segmented pill; teal is the active state. */
+.bss-v12-enhanced .bss-v12-chart-navigation,
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss-v12-chart-navigation,
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-chart-navigation {
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  padding:3px 0 15px!important;margin:0 auto 5px!important;
+  border:0!important;position:relative!important;
+}
+.bss-v12-enhanced .bss-v12-tabs{
+  display:grid!important;grid-template-columns:1fr 1fr!important;
+  width:min(470px,100%)!important;
+  padding:4px!important;gap:4px!important;
+  background:#1e1e1e!important;border-radius:999px!important;
+  box-sizing:border-box!important;
+}
+.bss-v12-enhanced .bss-v12-tab{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  border:0!important;border-radius:999px!important;
+  min-width:0!important;min-height:42px!important;
+  padding:9px 12px!important;background:transparent!important;
+  color:#f4f5f5!important;font-family:inherit!important;
+  font-size:13px!important;font-weight:550!important;letter-spacing:0!important;
+  box-shadow:none!important;text-decoration:none!important;
+}
+.bss-v12-enhanced .bss-v12-tab.is-active{
+  background:#033c4f!important;color:#fff!important;box-shadow:none!important;
+}
+.bss-v12-enhanced .bss-v12-tab:focus-visible{
+  outline:2px solid #fff!important;outline-offset:-5px!important;
+}
+/* Render exactly one view at a time. */
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-calculator,
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss__table-scroll,
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss__units-row,
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss__fit-scale,
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss-v12-support {display:none!important}
+/* Chart first: centered IN / CM and product details in their own view. */
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__units-row{
+  display:flex!important;justify-content:center!important;margin:6px auto 20px!important;
+}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__fit-scale,
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-support{
+  max-width:700px!important;margin:16px auto 23px!important;
+}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__table-scroll{
+  max-height:min(52dvh,490px)!important;overflow:auto!important;
+}
+/* Find My Size: photograph left, reference-sized form right. */
+.bss-v12-enhanced .bss-v12-calculator{
+  display:block!important;border:0!important;margin:0!important;padding:2px 0 0!important;
+  min-width:0!important;
+}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-calculator{display:none!important}
+.bss-v12-enhanced .bss-v12-calculator-grid{
+  display:grid!important;grid-template-columns:minmax(0,42%) minmax(0,58%)!important;
+  gap:clamp(22px,3.5vw,54px)!important;align-items:stretch!important;
+  max-width:100%!important;min-width:0!important;
+}
+.bss-v12-enhanced .bss-v12-calculator-grid.bss-v12-no-image{
+  grid-template-columns:minmax(0,1fr)!important;max-width:600px!important;margin-inline:auto!important;
+}
+/* The model always stays inside a bounded panel. No cover, crop, stretch,
+   negative positioning, transform or page bleed — on any viewport. */
+.bss-v12-enhanced .bss-v12-image{
+  box-sizing:border-box!important;
+  width:100%!important;max-width:100%!important;
+  height:min(59dvh,535px)!important;
+  min-height:350px!important;max-height:535px!important;
+  aspect-ratio:auto!important;
+  margin:0!important;padding:0!important;
+  overflow:hidden!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  background:#f7f7f6!important;
+  position:relative!important;
+}
+.bss-v12-enhanced .bss-v12-image img,
+.bss-v12-enhanced .bss-v12-image img[src],
+.bss-v12-enhanced .bss-v12-image picture,
+.bss-v12-enhanced .bss-v12-image picture img{
+  box-sizing:border-box!important;
+  display:block!important;width:100%!important;height:100%!important;
+  min-width:0!important;min-height:0!important;
+  max-width:100%!important;max-height:100%!important;
+  object-fit:contain!important;object-position:center center!important;
+  transform:none!important;scale:1!important;margin:0 auto!important;
+  position:static!important;clip-path:none!important;
+}
+.bss-v12-enhanced .bss-v12-form{
+  box-sizing:border-box!important;display:flex!important;flex-direction:column!important;
+  min-width:0!important;min-height:0!important;
+  padding:9px 0 5px!important;margin:0!important;gap:0!important;
+  color:#033c4f!important;
+}
+.bss-v12-enhanced .bss-v12-calculator-head{text-align:center!important;margin:0 0 9px!important}
+.bss-v12-enhanced .bss-v12-calculator-head h3{
+  font-size:clamp(20px,1.75vw,25px)!important;
+  font-weight:680!important;line-height:1.22!important;
+  margin:0!important;color:#17363f!important;letter-spacing:-.015em!important;
+}
+/* Center the selected units; IN precedes CM, and give a little padding below. */
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss-v12-unit-choice{
+  display:flex!important;justify-content:center!important;align-items:center!important;
+  width:100%!important;margin:5px auto 20px!important;gap:6px!important;
+  padding:0 0 11px!important;min-height:34px!important;
+}
+.bss-v12-enhanced .bss-v12-unit-choice button{
+  border:0!important;border-bottom:2px solid transparent!important;border-radius:0!important;
+  min-height:31px!important;padding:5px 8px!important;
+  font-size:12px!important;font-weight:600!important;background:transparent!important;
+  color:#8b9396!important;
+}
+.bss-v12-enhanced .bss-v12-unit-choice button.is-selected{
+  color:#033c4f!important;border-bottom-color:#033c4f!important;
+}
+/* The bar scales belong to the Size Chart view, not the measurement form. */
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss-v12-insights{display:none!important}
+/* Thin, airy measurement rows to mirror the supplied reference. */
+.bss-v12-enhanced .bss-v12-inputs{display:grid!important;gap:16px!important;margin:5px 0 0!important}
+.bss-v12-enhanced .bss-v12-field{
+  box-sizing:border-box!important;
+  display:grid!important;grid-template-columns:minmax(74px,96px) minmax(0,1fr) 24px!important;
+  align-items:center!important;gap:15px!important;
+  padding:5px 0!important;min-width:0!important;
+  font-size:10px!important;font-weight:570!important;letter-spacing:.045em!important;
+  color:#6a787f!important;line-height:1.25!important;text-transform:uppercase!important;
+}
+.bss-v12-enhanced .bss-v12-field input{
+  box-sizing:border-box!important;width:100%!important;min-width:0!important;
+  height:51px!important;padding:9px 2px!important;
+  border:0!important;border-bottom:1px solid #d7dfe1!important;
+  border-radius:0!important;background:#fff!important;
+  box-shadow:none!important;
+  color:#173b47!important;font:inherit!important;
+  font-size:20px!important;font-weight:450!important;
+  letter-spacing:0!important;text-transform:none!important;
+}
+.bss-v12-enhanced .bss-v12-field input::placeholder{
+  font-size:15px!important;color:#9aa5a8!important;opacity:1!important;font-weight:400!important;
+}
+.bss-v12-enhanced .bss-v12-unit{font-size:11px!important;color:#a1abad!important;letter-spacing:0!important}
+/* Secondary actions and primary CTA are deliberately separate and right aligned. */
+.bss-v12-enhanced .bss-v12-actions{
+  display:flex!important;flex-direction:column!important;gap:10px!important;
+  margin-top:auto!important;padding:24px 0 0!important;
+  align-items:stretch!important;justify-content:flex-end!important;
+}
+.bss-v12-enhanced .bss-v12-helpers{
+  display:flex!important;flex-wrap:wrap!important;
+  justify-content:center!important;align-items:center!important;gap:10px!important;
+}
+.bss-v12-enhanced .bss-v12-helper{
+  appearance:none!important;min-height:33px!important;
+  border:0!important;border-radius:999px!important;
+  background:#f4f4f3!important;color:#66777c!important;
+  padding:8px 15px!important;font:inherit!important;
+  font-size:11px!important;font-weight:570!important;
+  cursor:pointer!important;line-height:1.3!important;
+}
+.bss-v12-enhanced .bss-v12-helper:hover{background:#e8eeee!important;color:#033c4f!important}
+.bss-v12-enhanced .bss-v12-measure-help{
+  padding:12px 14px!important;margin:2px 0!important;
+  background:#f6f8f8!important;border:1px solid #e4e9e9!important;
+  color:#35515a!important;border-radius:8px!important;
+  font-size:11px!important;line-height:1.55!important;
+}
+.bss-v12-enhanced .bss-v12-measure-help[hidden]{display:none!important}
+.bss-v12-enhanced .bss-v12-measure-help p{margin:3px 0!important}
+.bss-v12-enhanced .bss-v12-primary-row{display:flex!important;justify-content:flex-end!important;align-items:center!important}
+.bss-v12-enhanced .bss-v12-submit{
+  background:#033c4f!important;color:#fff!important;
+  border:1px solid #033c4f!important;border-radius:3px!important;
+  min-height:47px!important;padding:12px 22px!important;
+  font-size:13px!important;font-weight:620!important;line-height:1.2!important;
+  cursor:pointer!important;box-shadow:none!important;
+}
+.bss-v12-enhanced .bss-v12-submit:hover{background:#14576a!important}
+.bss-v12-enhanced .bss-v12-submit:focus-visible,
+.bss-v12-enhanced .bss-v12-helper:focus-visible{outline:2px solid #033c4f!important;outline-offset:3px!important}
+/* One result line ONLY, placed quietly within the right panel. */
+.bss-v12-enhanced .bss-v12-result:empty{display:none!important}
+.bss-v12-enhanced .bss-v12-result:not(:empty){
+  display:block!important;border:0!important;border-radius:0!important;
+  padding:8px 0 0!important;margin:11px 0 0!important;
+  background:none!important;box-shadow:none!important;text-align:center!important;
+}
+.bss-v12-enhanced .bss-v12-best-match{text-align:center!important;margin:0!important;line-height:1.4!important}
+.bss-v12-enhanced .bss-v12-best-match-label{font-size:15px!important;color:#27444d!important;font-weight:500!important}
+.bss-v12-enhanced .bss-v12-best-match-value{font-size:24px!important;color:#033c4f!important;font-weight:740!important}
+@media(max-width:760px){
+  .bss__layer.bss-v12-enhanced[data-bss-mode="modal"]{padding:7px!important}
+  .bss__layer.bss-v12-enhanced[data-bss-mode="modal"] .bss__panel{
+    width:calc(100vw - 14px)!important;max-width:calc(100vw - 14px)!important;
+    max-height:calc(100dvh - 14px)!important;border-radius:9px!important;
+  }
+  .bss-v12-enhanced .bss__head{min-height:55px!important;padding:14px 46px 8px!important}
+  .bss-v12-enhanced .bss__heading{font-size:16px!important}
+  .bss-v12-enhanced .bss__content{padding:0 17px 19px!important}
+  .bss-v12-enhanced .bss-v12-tabs{width:100%!important}
+  .bss-v12-enhanced .bss-v12-tab{min-height:39px!important;font-size:12px!important;padding:8px!important}
+  .bss-v12-enhanced .bss-v12-calculator-grid{
+    grid-template-columns:minmax(0,1fr)!important;gap:14px!important;
+  }
+  .bss-v12-enhanced .bss-v12-image{
+    width:100%!important;height:min(26dvh,190px)!important;
+    max-height:190px!important;min-height:110px!important;
+  }
+  .bss-v12-enhanced .bss-v12-form{padding:1px 0 3px!important}
+  .bss-v12-enhanced .bss-v12-calculator-head{margin:1px 0 4px!important}
+  .bss-v12-enhanced .bss-v12-calculator-head h3{font-size:20px!important}
+  .bss-v12-enhanced .bss-v12-unit-choice{margin:2px auto 11px!important;padding-bottom:8px!important}
+  .bss-v12-enhanced .bss-v12-inputs{gap:2px!important}
+  .bss-v12-enhanced .bss-v12-field{grid-template-columns:76px 1fr 23px!important;gap:8px!important}
+  .bss-v12-enhanced .bss-v12-field input{height:43px!important;font-size:17px!important}
+  .bss-v12-enhanced .bss-v12-field input::placeholder{font-size:13px!important}
+  .bss-v12-enhanced .bss-v12-actions{padding-top:13px!important}
+  .bss-v12-enhanced .bss-v12-submit{min-height:43px!important;font-size:12px!important}
+  .bss-v12-enhanced .bss-v12-best-match-label{font-size:14px!important}
+  .bss-v12-enhanced .bss-v12-best-match-value{font-size:21px!important}
+}
+@media (prefers-reduced-motion:reduce){
+  .bss-v12-enhanced .bss-v12-tab{transition:none!important}
+}
