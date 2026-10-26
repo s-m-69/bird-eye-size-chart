@@ -1,0 +1,30 @@
+{% comment %}
+BSS V12 global loader. No database calls at page-load.
+Quick view reads the existing product page chart only on demand; no app proxy.
+Existing PDP app block remains in place. This is additive.
+{% endcomment %}
+{{ 'size-studio-embed.css' | asset_url | stylesheet_tag }}
+{% assign bss_v12_default_image = '' %}
+{% if block.settings.measurement_image != blank %}
+  {% assign bss_v12_default_image = block.settings.measurement_image | image_url: width: 1200 %}
+{% endif %}
+<div hidden data-bss-v12-global
+  data-bss-quickview="{{ block.settings.enable_quickview }}"
+  data-bss-tracking="{{ block.settings.enable_tracking }}"
+  data-bss-image="{{ bss_v12_default_image | escape }}"></div>
+{% schema %}
+{
+  "name": "Size Studio Global",
+  "target": "body",
+  "javascript": "size-studio-v12.js",
+  "stylesheet": "size-studio-v12.css",
+  "settings": [
+    {"type":"header","content":"Find My Size"},
+    {"type":"image_picker","id":"measurement_image","label":"Model image for measurement guidance"},
+    {"type":"checkbox","id":"enable_tracking","label":"Publish anonymous sizing events to Shopify pixels","default":true},
+    {"type":"header","content":"Quick views"},
+    {"type":"paragraph","content":"Uses the same Shopify-rendered product chart as PDP. Enable after draft-theme quick-view testing."},
+    {"type":"checkbox","id":"enable_quickview","label":"Enable quick-view size guides","default":false}
+  ]
+}
+{% endschema %}

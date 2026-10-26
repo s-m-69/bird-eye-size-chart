@@ -20,6 +20,10 @@ function checkMutation<T extends { userErrors?: { message: string }[] }>(payload
 export type ChartData = {
   /** Optional merchandising fit indicator: 1=small, 3=true to size, 5=large. */
   fitScale?: number;
+  /** Optional support: 1 low, 2 mid, 3 high. */
+  supportLevel?: number;
+  /** Only verified body ranges can produce a customer size recommendation. */
+  recommendationBasis?: "body" | "garment" | "unverified";
   unit: "cm" | "in";
   columns: string[];
   rows: string[][];
@@ -124,6 +128,19 @@ export function validateChart(value: any): Omit<Chart, "id" | "handle"> {
       throw new Error('Fit scale must be an integer from 1 to 5, or left blank.');
     }
     data.fitScale = fit;
+  }
+  // BSS_V12_0_0 — verified body sizing gate and merchandising support marker.
+  const support = raw.supportLevel;
+  if (support !== undefined && support !== null && support !== '') {
+    if (typeof support !== 'number' || !Number.isInteger(support) || support < 1 || support > 3) {
+      throw new Error('Support must be Low (1), Mid (2), High (3), or blank.');
+    }
+    data.supportLevel = support;
+  }
+  const basis = raw.recommendationBasis;
+  if (basis !== undefined && basis !== null && basis !== '') {
+    if (!['body', 'garment', 'unverified'].includes(basis)) throw new Error('Invalid body-measurement verification state.');
+    data.recommendationBasis = basis;
   }
   if (JSON.stringify(data).length > 26000) throw new Error("Size chart is too large.");
   return { name, productType, tag, data };

@@ -14,7 +14,7 @@
   catch (_error) { return; }
   if (typeof chart === 'string') { try { chart = JSON.parse(chart); } catch (_error) { return; } }
   if (!chart || !Array.isArray(chart.columns) || chart.columns.length < 2 || !Array.isArray(chart.rows) || !chart.rows.length) return;
-  let unit = chart.unit === 'in' ? 'in' : 'cm';
+  let unit = 'in';
   let isOpen = false, previousFocus = null, opener = null, savedOverflow = '';
   const hideKiwi = root.dataset.bssHideKiwi === 'true';
   const make = (tag, cls, value) => {
@@ -77,7 +77,7 @@
     const unitsRow = make('div','bss__units-row');
     const units = make('div','bss__units');
     units.setAttribute('role','group'); units.setAttribute('aria-label','Measurement units');
-    for (const choice of ['cm','in']) {
+    for (const choice of ['in','cm']) {
       const button = make('button',choice === unit ? 'is-selected' : '',choice.toUpperCase());
       button.type = 'button'; button.setAttribute('aria-pressed',String(choice === unit));
       button.setAttribute('aria-label',choice === 'cm' ? 'Show centimetres' : 'Show inches');
@@ -140,6 +140,20 @@
     layer.style.setProperty('--bss-heading-font', getComputedStyle(themeHeading || document.body).fontFamily);
     layer.style.setProperty('--bss-body-font', getComputedStyle(document.body).fontFamily);
     layer.dataset.bssMode=root.dataset.bssMode==='drawer'?'drawer':'modal';
+
+    // A host theme can hide elements marked aria-hidden, collapsing the scrim to 0x0.
+    // Enforce the exact browser-tested correction on the scrim only, not the theme.
+    const scrim = layer.querySelector('.bss__scrim');
+    if (scrim) {
+      for (const [property, value] of [
+        ['display', 'block'],
+        ['visibility', 'visible'],
+        ['position', 'absolute'],
+        ['inset', '0'],
+        ['width', '100%'],
+        ['height', '100%']
+      ]) scrim.style.setProperty(property, value, 'important');
+    }
     document.body.appendChild(layer);layer.hidden=false;
     opener?.setAttribute('aria-expanded','true');
     savedOverflow=document.body.style.overflow;document.body.style.overflow='hidden';

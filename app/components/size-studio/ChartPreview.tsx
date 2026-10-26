@@ -26,6 +26,16 @@ export function ChartPreview({ draft, productTitle }: ChartPreviewProps) {
         <div className="bs-v11-fit-labels" aria-hidden="true"><span>Runs Small</span><span>True to Size</span><span>Runs Large</span></div>
       </div>
     )}
+    {/* BSS_V12_0_0 — Support bar. */}
+    {Number.isInteger(draft.data.supportLevel) && Number(draft.data.supportLevel) >= 1 && Number(draft.data.supportLevel) <= 3 && (
+      <div className="bs-v12-support-preview" role="img" aria-label={`Support: ${['Low support','Mid support','High support'][Number(draft.data.supportLevel)-1]}`} style={{padding:'8px 2px 20px'}}>
+        <p style={{fontSize:12,fontWeight:700,margin:'0 0 12px'}}>Support</p>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:4,height:9}} aria-hidden="true">
+          {[1,2,3].map(i => <span key={i} style={{background:i===draft.data.supportLevel?'#236b71':'#e9e6e6'}} />)}
+        </div>
+        <div style={{display:'flex',justifyContent:'space-between',marginTop:9,fontSize:10}} aria-hidden="true"><span>LOW SUPPORT</span><span>MID SUPPORT</span><span>HIGH SUPPORT</span></div>
+      </div>
+    )}
     <div className="bs-v11-table-scroll" tabIndex={0} role="region" aria-label="Preview measurements (scroll if needed)">
       <table className="bs-v11-table preview"><thead><tr>{draft.data.columns.map((column, i) => <th scope="col" key={i}>{column || 'Measurement'}</th>)}</tr></thead>
         <tbody>{draft.data.rows.map((row, r) => <tr key={r}>{row.map((cell, c) => c === 0

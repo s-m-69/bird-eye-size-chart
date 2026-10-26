@@ -470,6 +470,34 @@ export default function SizeChartsPage() {
                 </label>
                 <p className="bs-v11-muted">1 Runs Small · 2 Slightly Small · 3 True to Size · 4 Slightly Large · 5 Runs Large. Leave blank to hide.</p>
               </div>
+              {/* BSS_V12_0_0 — optional support attribute and body-range approval. */}
+              <section className="bs-v12-settings" aria-label="Support and size recommendations">
+                <label className="bs-v11-label">Support (optional)
+                  <select value={draft.data.supportLevel ?? ''} onChange={(e) => {
+                    const v=e.currentTarget.value;
+                    modify((d) => {
+                      if (!v) delete d.data.supportLevel;
+                      else d.data.supportLevel=Number(v);
+                    });
+                  }}>
+                    <option value="">Not applicable — hide Support bar</option>
+                    <option value="1">Low support</option>
+                    <option value="2">Mid support</option>
+                    <option value="3">High support</option>
+                  </select>
+                </label>
+                <label className="bs-v11-label">Size recommendation eligibility
+                  <select value={draft.data.recommendationBasis ?? 'unverified'} onChange={(e) => {
+                    const basis=e.currentTarget.value as 'body' | 'garment' | 'unverified';
+                    modify((d) => { d.data.recommendationBasis=basis; });
+                  }}>
+                    <option value="unverified">Unverified — no recommendations</option>
+                    <option value="body">Approved body-measurement ranges</option>
+                    <option value="garment">Garment measurements — no recommendations</option>
+                  </select>
+                </label>
+                <p className="bs-v11-muted">Only select Approved body-measurement ranges after confirming the table describes customers’ body dimensions. The calculator will otherwise be disabled.</p>
+              </section>
               <div className="bs-v11-section-title"><div><h2>Measurements</h2><p className="bs-v11-muted">Only enter inches. CM is calculated automatically.</p></div><span className="bs-v11-unit-label">IN</span></div>
               <div className="bs-v11-table-scroll" role="region" aria-label="Edit measurements; scroll sideways for additional columns" tabIndex={0}><table className="bs-v11-edit-table"><thead><tr>{draft.data.columns.map((col, colIndex) => <th key={colIndex}>
                 {colIndex === 0 ? <span>Size</span> : <><input aria-label={`Measurement column ${colIndex + 1}`} value={col} onChange={(e) => modify((d) => { d.data.columns[colIndex] = e.target.value; })}/><button type="button" title={`Remove ${col}`} aria-label={`Remove ${col} column`} disabled={draft.data.columns.length <= 2} onClick={() => modify((d) => { d.data.columns.splice(colIndex, 1); d.data.rows.forEach((r) => r.splice(colIndex, 1)); })}>×</button></>}
@@ -527,7 +555,7 @@ export default function SizeChartsPage() {
         </Form>
       </section>
     </div>}
-    <style>{adminStyles + libraryEnhancementStyles + fitScaleEditorStyles}</style>
+    <style>{adminStyles + libraryEnhancementStyles + fitScaleEditorStyles + v12SettingsStyles}</style>
   </s-page>;
 }
 
@@ -694,3 +722,12 @@ function FitCsvUpdater({ charts, truncated }: { charts: Chart[]; truncated: bool
     {finished && !error && <p role="status" className="bs-v11-alert success">Fit rating update complete. Refresh your chart library to see the latest ratings.</p>}
   </section>;
 }
+
+// BSS_V12_0_0 — editor settings only, scoped to Size Studio.
+const v12SettingsStyles = String.raw`
+.bs-v12-settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin:14px 0 20px;padding:20px;border:1px solid #e3ebed;background:#fbfcfc}
+.bs-v12-settings .bs-v11-label{display:block;min-width:0}
+.bs-v12-settings select{display:block;width:100%;height:43px;margin-top:7px;padding:8px 10px;font:inherit;font-size:13px;color:#033C4F;background:#fff;border:1px solid #b9cdd1;border-radius:0}
+.bs-v12-settings select:focus-visible{outline:2px solid #033C4F;outline-offset:2px}
+.bs-v12-settings p{grid-column:1/-1;margin:0;font-size:12px;line-height:1.5}
+`;

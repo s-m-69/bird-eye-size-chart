@@ -1,0 +1,36 @@
+/* BSS V12: additive styles; deliberately scoped to the Size Studio namespace. */
+.bss-v12-support{margin:20px 0 25px;color:#033c4f}
+.bss-v12-subtitle{margin:0 0 21px;font-size:15px;line-height:1.4;font-weight:700}
+.bss-v12-support-track{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;height:9px;background:transparent;border-radius:30px}
+.bss-v12-support-track span{background:#e9e6e6;position:relative}
+.bss-v12-support-track span:first-child{border-radius:30px 0 0 30px}
+.bss-v12-support-track span:last-child{border-radius:0 30px 30px 0}
+.bss-v12-support-track span.is-selected:before{content:'';height:21px;width:21px;border-radius:50%;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#236b71;z-index:1;box-shadow:0 0 0 3px #fff}
+.bss-v12-track-labels{display:flex;justify-content:space-between;gap:10px;margin:15px 0 0;font-size:10px;line-height:1.5;letter-spacing:.075em;font-weight:650;color:#183e48}
+.bss-v12-track-labels span:first-child{text-align:left}.bss-v12-track-labels span:nth-child(2){text-align:center}.bss-v12-track-labels span:last-child{text-align:right}
+.bss-v12-calculator{margin:28px 0 30px;padding:24px 0;border-top:1px solid #e2e9e9;border-bottom:1px solid #e2e9e9;font-family:inherit;color:#173b47}
+.bss-v12-calculator-head{margin:0 0 20px}.bss-v12-calculator-head h3{font-size:22px;letter-spacing:-.025em;line-height:1.15;margin:0 0 7px;font-weight:650}.bss-v12-calculator-head p{margin:0;font-size:13px;color:#5c737b;line-height:1.5}
+.bss-v12-calculator-grid{display:grid;grid-template-columns:minmax(160px,41%) minmax(0,1fr);gap:28px;align-items:stretch}
+.bss-v12-image{overflow:hidden;background:#f2f3f2;min-height:270px;aspect-ratio:3/4;display:flex;justify-content:center;align-items:center}
+.bss-v12-image img{width:100%;height:100%;object-fit:cover;object-position:50% 15%}
+.bss-v12-image-placeholder{font-size:12px;letter-spacing:.025em;color:#6c7e83;text-align:center;padding:18px}
+.bss-v12-form{display:flex;flex-direction:column;gap:11px;min-width:0}
+.bss-v12-unit-choice{display:flex;gap:0;margin:0 0 8px}.bss-v12-unit-choice button{background:transparent;border:0;border-bottom:2px solid transparent;color:#75888c;min-width:42px;min-height:34px;cursor:pointer;font:inherit;font-size:12px;letter-spacing:.04em;font-weight:650}.bss-v12-unit-choice button.is-selected{color:#033c4f;border-bottom-color:#033c4f}
+.bss-v12-field{display:grid;grid-template-columns:92px 1fr 30px;gap:12px;align-items:center;font:inherit;font-size:11px;color:#3c535c;letter-spacing:.04em;text-transform:uppercase}
+.bss-v12-field input{width:100%;min-width:0;height:44px;border:0;border-bottom:1px solid #d8e0e1;background:#fff;border-radius:0;padding:7px 2px;font-family:inherit;font-size:18px;line-height:1.2;font-weight:520;color:#163842;font-variant-numeric:tabular-nums}
+.bss-v12-field input:focus-visible{outline:2px solid #236b71;outline-offset:2px}
+.bss-v12-unit{font-size:11px;color:#6e8186}
+.bss-v12-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:auto;padding-top:22px}
+.bss-v12-submit{display:inline-flex;justify-content:center;align-items:center;background:#033c4f;border:1px solid #033c4f;color:#fff;cursor:pointer;padding:12px 17px;min-height:44px;font-family:inherit;font-size:12px;font-weight:650}
+.bss-v12-submit:hover:not([disabled]){background:#124e5c}.bss-v12-submit:disabled{opacity:.45;cursor:not-allowed}
+.bss-v12-secondary{display:inline-flex;align-items:center;justify-content:center;padding:12px 5px;background:transparent;border:0;color:#033c4f;font-size:12px;text-decoration:underline;cursor:pointer}
+.bss-v12-result{margin:8px 0 0;font-size:13px;line-height:1.55;color:#2e4c54}.bss-v12-result h4{font-size:18px;margin:4px 0 7px;color:#033c4f}.bss-v12-result p{margin:5px 0}.bss-v12-fit-note{border-left:2px solid #236b71;padding:5px 0 5px 9px}.bss-v12-caution{font-size:12px;line-height:1.5;color:#69787c}
+.bss-v12-simple-units{display:flex;justify-content:center;margin:18px 0;gap:8px}.bss-v12-simple-units button{background:transparent;border:1px solid #d3e1e2;padding:6px 12px;cursor:pointer;font-size:12px}
+.bss-v12-calculator button:focus-visible,.bss-v12-simple-units button:focus-visible{outline:2px solid #236b71;outline-offset:2px}
+@media(max-width:640px){.bss-v12-calculator{margin:20px 0;padding:20px 0}.bss-v12-calculator-grid{grid-template-columns:1fr;gap:18px}.bss-v12-image{min-height:170px;max-height:210px;aspect-ratio:16/9}.bss-v12-calculator-head h3{font-size:19px}.bss-v12-field{grid-template-columns:77px 1fr 24px;gap:8px}.bss-v12-track-labels{font-size:9px}.bss-v12-actions{padding-top:10px}}
+@media(prefers-reduced-motion:reduce){.bss-v12-calculator *{scroll-behavior:auto!important}}
+
+/* Shared product-card eye-icon quick view; applies only to the injected trigger. */
+.bss-v12-quick-trigger{display:inline-flex;align-items:center;justify-content:flex-start;margin-inline-start:12px;min-height:28px;vertical-align:middle;padding:0;border:0;background:none;color:#033c4f;text-decoration:underline;text-underline-offset:3px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}.bss-v12-quick-trigger:focus-visible{outline:2px solid #033c4f;outline-offset:3px}
+.size_select > .bss-v12-quick-trigger:first-child{margin-inline-start:0;margin-bottom:8px}
+.bss__layer[data-bss-mode="modal"]{z-index:2147482000}
