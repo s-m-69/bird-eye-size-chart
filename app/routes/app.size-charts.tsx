@@ -14,6 +14,9 @@ import { assignProductsById } from '../models/sizeStudioAssignments.server';
 import { importCsvBatch } from '../models/sizeStudioCsv.server';
 import { canonicalChartName, csvTemplate, planCsv, CSV_BATCH_SIZE, CSV_MAX_BYTES } from '../models/sizeStudioCsv';
 import type { CsvPlan, ImportResult } from '../models/sizeStudioCsv';
+import { planFitCsv, fitCsvTemplate, FIT_BATCH_SIZE } from '../models/sizeStudioFitCsv';
+import type { FitUpdate, FitResult } from '../models/sizeStudioFitCsv';
+import { updateFitBatch } from '../models/sizeStudioFitCsv.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
@@ -70,6 +73,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       const batch: unknown = JSON.parse(raw);
       const importResults = await importCsvBatch(admin, batch);
       return { importResults };
+    }
+    if (intent === 'update-fit-batch') {
+      const raw = String(form.get('payload') || '');
+      if (raw.length > 10000) throw new Error('Fit update batch is too large.');
+      return { fitResults: await updateFitBatch(admin, JSON.parse(raw)) };
     }
     if (intent === 'assign-picked') {
       const chartHandle = String(form.get('chartHandle') || '');
@@ -343,6 +351,7 @@ export default function SizeChartsPage() {
       {navigation.state === 'loading' && screen === 'library' ? <AdminSkeleton /> : !installed ? <div className="bs-v11-empty"><h2>Set up your chart library</h2><p className="bs-v11-muted">This creates a dedicated size-chart collection in Shopify. Your existing products and size guides are not changed.</p>
         <Form method="post"><input type="hidden" name="intent" value="setup"/><button className="bs-v11-btn primary" type="submit">Set up library</button></Form></div>
       : screen === 'import' ? <>
+        <FitCsvUpdater charts={charts} truncated={truncated} />
         <div className="bs-v11-import-layout">
           <section className="bs-v11-csv-steps">
             <div className="bs-v11-step-index">01 — TEMPLATE</div>
@@ -581,3 +590,107 @@ const fitScaleEditorStyles = String.raw`
 .bs-v11-fit-labels span:nth-child(2){text-align:center}
 .bs-v11-fit-labels span:last-child{text-align:right}
 `;
+
+
+/** Optional fit-only updater, isolated from the existing create-only measurement importer. */
+function FitCsvUpdater({ charts, truncated }: { charts: Chart[]; truncated: boolean }) {
+  const fetcher = useFetcher<typeof action>();
+  const [updates, setUpdates] = useState<FitUpdate[]>([]);
+  const [filename, setFilename] = useState('');
+  const [error, setError] = useState('');
+  const [results, setResults] = useState<FitResult[]>([]);
+  const [offset, setOffset] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [inFlight, setInFlight] = useState(false);
+  const lastResponse = useRef<unknown>(null);
+  const countByName = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const chart of charts) {
+      const key = canonicalChartName(chart.name);
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return counts;
+  }, [charts]);
+  const updated = results.filter((r) => r.status === 'updated').length;
+  const unchanged = results.filter((r) => r.status === 'unchanged').length;
+  const failures = results.filter((r) => r.status === 'error');
+  const finished = updates.length > 0 && offset >= updates.length && !running;
+
+  function downloadRatings() {
+    const csv = '\uFEFF' + fitCsvTemplate(charts);
+    const href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = href;
+    a.download = 'BirdEye_Fit_Ratings.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(href);
+  }
+  async function loadRatings(file?: File) {
+    if (!file || running || inFlight) return;
+    setFilename(file.name); setUpdates([]); setError(''); setResults([]); setOffset(0);
+    if (!/\.csv$/i.test(file.name) || file.size > 256 * 1024) {
+      setError('Upload a CSV file under 256 KB.'); return;
+    }
+    if (truncated) { setError('Chart library is incomplete. Bulk updates are disabled.'); return; }
+    try {
+      const parsed = planFitCsv(await file.text());
+      const missing = parsed.filter((item) => countByName.get(canonicalChartName(item.name)) !== 1);
+      if (missing.length) throw new Error('Unknown or ambiguous chart names: ' + missing.slice(0, 8).map((c) => c.name).join(', ') + (missing.length > 8 ? '…' : '') + '. All names must match the existing chart library.');
+      setUpdates(parsed);
+    } catch (err) { setError(err instanceof Error ? err.message : 'The CSV could not be read.'); }
+  }
+  function runUpdates() {
+    if (!updates.length || truncated || inFlight) return;
+    setError(''); setResults([]); setOffset(0);
+    lastResponse.current = fetcher.data;
+    setRunning(true);
+  }
+  useEffect(() => {
+    if (!running || inFlight || fetcher.state !== 'idle') return;
+    if (offset >= updates.length) { setRunning(false); return; }
+    setInFlight(true);
+    fetcher.submit({ intent: 'update-fit-batch', payload: JSON.stringify(updates.slice(offset, offset + FIT_BATCH_SIZE)) }, { method: 'post' });
+  }, [running, inFlight, fetcher.state, offset, updates]);
+  useEffect(() => {
+    if (!inFlight || fetcher.state !== 'idle' || !fetcher.data || fetcher.data === lastResponse.current) return;
+    lastResponse.current = fetcher.data;
+    setInFlight(false);
+    if ('fitResults' in fetcher.data && Array.isArray(fetcher.data.fitResults)) {
+      const next = fetcher.data.fitResults as FitResult[];
+      setResults((all) => [...all, ...next]);
+      if (next.some((row) => row.status === 'error')) {
+        setError('Some ratings failed. Check the results; successful rows were saved. Reupload the same file to retry safely.');
+        setRunning(false);
+      } else {
+        setOffset((value) => value + next.length);
+      }
+    } else {
+      const reason = ('error' in fetcher.data && fetcher.data.error) ? String(fetcher.data.error) : 'Shopify did not confirm this batch.';
+      setError(reason + ' Reupload the same CSV to retry safely.');
+      setRunning(false);
+    }
+  }, [inFlight, fetcher.state, fetcher.data]);
+  return <section className="bs-v11-csv-review" aria-label="Update fit ratings from CSV">
+    <div className="bs-v11-review-head"><div>
+      <div className="bs-v11-step-index">QUICK UPDATE / EXISTING CHARTS</div>
+      <h2>Bulk update fit ratings</h2>
+      <p className="bs-v11-muted">Download the prefilled chart list, enter 1–5, save as CSV and upload. Measurements and product assignments stay untouched. Blank = leave unchanged; <strong>clear</strong> = remove rating.</p>
+    </div></div>
+    <div className="bs-v11-csv-footer" style={{display:'flex',gap:12,flexWrap:'wrap',alignItems:'center'}}>
+      <button type="button" className="bs-v11-btn" disabled={running || inFlight || truncated || !charts.length} onClick={downloadRatings}>Download my fit ratings CSV ↓</button>
+      <label htmlFor="bs-fit-csv-file">Upload updated CSV</label>
+      <input id="bs-fit-csv-file" aria-label="Upload fit ratings CSV" type="file" accept=".csv,text/csv" disabled={running || inFlight || truncated} onChange={(event) => void loadRatings(event.target.files?.[0])}/>
+    </div>
+    {filename && <p className="bs-v11-muted">{filename}</p>}
+    {updates.length > 0 && <div className="bs-v11-csv-footer">
+      <p className="bs-v11-muted">{updates.length} existing chart rating{updates.length===1?'':'s'} ready. {updates.slice(0,5).map((row) => `${row.name}: ${row.rating ?? 'clear'}`).join(' · ')}{updates.length>5?' …':''}</p>
+      <button type="button" className="bs-v11-btn primary" disabled={running || inFlight || truncated || finished} onClick={runUpdates}>{running || inFlight ? 'Updating ratings…' : finished ? 'Ratings updated ✓' : `Update ${updates.length} fit ratings`}</button>
+    </div>}
+    {results.length > 0 && <p role="status" className="bs-v11-csv-progress">{updated} updated · {unchanged} unchanged · {failures.length} errors · {Math.min(offset,updates.length)} of {updates.length} processed</p>}
+    {failures.length > 0 && <p role="alert" className="bs-v11-alert error">{failures.slice(0,4).map((row) => `${row.name}: ${row.message}`).join(' · ')}</p>}
+    {error && <p role="alert" className="bs-v11-alert error">{error}</p>}
+    {finished && !error && <p role="status" className="bs-v11-alert success">Fit rating update complete. Refresh your chart library to see the latest ratings.</p>}
+  </section>;
+}
