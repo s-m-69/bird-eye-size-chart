@@ -18,6 +18,8 @@ function checkMutation<T extends { userErrors?: { message: string }[] }>(payload
 }
 
 export type ChartData = {
+  /** Optional merchandising fit indicator: 1=small, 3=true to size, 5=large. */
+  fitScale?: number;
   unit: "cm" | "in";
   columns: string[];
   rows: string[][];
@@ -115,6 +117,14 @@ export function validateChart(value: any): Omit<Chart, "id" | "handle"> {
   const data: ChartData = {
     unit: "in", columns, rows,
   };
+  // Never assume True to Size. Existing charts omit fitScale until staff set it.
+  const fit = raw.fitScale;
+  if (fit !== undefined && fit !== null && fit !== '') {
+    if (typeof fit !== 'number' || !Number.isInteger(fit) || fit < 1 || fit > 5) {
+      throw new Error('Fit scale must be an integer from 1 to 5, or left blank.');
+    }
+    data.fitScale = fit;
+  }
   if (JSON.stringify(data).length > 26000) throw new Error("Size chart is too large.");
   return { name, productType, tag, data };
 }

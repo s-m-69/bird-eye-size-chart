@@ -177,7 +177,9 @@ export default function SizeChartsPage() {
     (Boolean(active?.handle) && assignedFetcher.data?.chartHandle !== active?.handle);
   const savedAssignments = !assignedLoading && assignedFetcher.data?.chartHandle === active?.handle
     ? assignedFetcher.data : undefined;
-  const saveIssue = getDraftIssue(draft);
+  const fitRating = draft.data.fitScale;
+  const saveIssue = fitRating !== undefined && (!Number.isInteger(fitRating) || fitRating < 1 || fitRating > 5)
+    ? 'Fit rating must be a whole number between 1 and 5.' : getDraftIssue(draft);
   const [csvParsing, setCsvParsing] = useState(false);
   const [pickerBusy, setPickerBusy] = useState(false);
 
@@ -437,6 +439,28 @@ export default function SizeChartsPage() {
           <div className="bs-v11-editor">
             <Form method="post" aria-label="Save size chart"><input type="hidden" name="intent" value="save"/><input type="hidden" name="id" value={active?.id || ''}/><input type="hidden" name="payload" value={JSON.stringify(draft)}/>
               <label className="bs-v11-label">Chart name<input required value={draft.name} placeholder="e.g. Flow Leggings" maxLength={120} onChange={(e) => modify((d) => { d.name = e.target.value; })}/></label>
+              <div className="bs-v11-fit-editor">
+                <label className="bs-v11-label" htmlFor="bs-v11-fit-scale">Fit rating (1–5)
+                  <input
+                    id="bs-v11-fit-scale"
+                    type="number"
+                    min={1}
+                    max={5}
+                    step={1}
+                    inputMode="numeric"
+                    placeholder="e.g. 3"
+                    value={draft.data.fitScale ?? ''}
+                    onChange={(event) => {
+                      const value = event.currentTarget.value;
+                      modify((chart) => {
+                        if (value === '') delete chart.data.fitScale;
+                        else chart.data.fitScale = Number(value);
+                      });
+                    }}
+                  />
+                </label>
+                <p className="bs-v11-muted">1 Runs Small · 2 Slightly Small · 3 True to Size · 4 Slightly Large · 5 Runs Large. Leave blank to hide.</p>
+              </div>
               <div className="bs-v11-section-title"><div><h2>Measurements</h2><p className="bs-v11-muted">Only enter inches. CM is calculated automatically.</p></div><span className="bs-v11-unit-label">IN</span></div>
               <div className="bs-v11-table-scroll" role="region" aria-label="Edit measurements; scroll sideways for additional columns" tabIndex={0}><table className="bs-v11-edit-table"><thead><tr>{draft.data.columns.map((col, colIndex) => <th key={colIndex}>
                 {colIndex === 0 ? <span>Size</span> : <><input aria-label={`Measurement column ${colIndex + 1}`} value={col} onChange={(e) => modify((d) => { d.data.columns[colIndex] = e.target.value; })}/><button type="button" title={`Remove ${col}`} aria-label={`Remove ${col} column`} disabled={draft.data.columns.length <= 2} onClick={() => modify((d) => { d.data.columns.splice(colIndex, 1); d.data.rows.forEach((r) => r.splice(colIndex, 1)); })}>×</button></>}
@@ -494,7 +518,7 @@ export default function SizeChartsPage() {
         </Form>
       </section>
     </div>}
-    <style>{adminStyles + libraryEnhancementStyles}</style>
+    <style>{adminStyles + libraryEnhancementStyles + fitScaleEditorStyles}</style>
   </s-page>;
 }
 
@@ -539,4 +563,21 @@ const libraryEnhancementStyles = String.raw`
 .bs-v11-btn.danger-solid{border:1px solid #922941;background:#922941;color:white}
 .bs-v11-btn.danger-solid:hover:not(:disabled){background:#751c32}
 @media(max-width:900px){.bs-v11-chart-actions{justify-content:flex-start}.bs-v11-chart-info{flex-basis:calc(100% - 45px)}.bs-v11-chart-row{flex-wrap:wrap}}
+`;
+
+// BSS_V11_3_2_FIT_SCALE — editor-specific styles; the storefront uses its own scoped CSS.
+const fitScaleEditorStyles = String.raw`
+.bs-v11-fit-editor{border-top:1px solid #e1e9eb;padding:18px 0 14px;margin:14px 0 20px}
+.bs-v11-fit-editor .bs-v11-label{display:block;max-width:240px;margin:0}
+.bs-v11-fit-editor input{display:block;width:125px;height:42px;margin-top:7px;padding:9px 12px;border:1px solid #b9cdd1;border-radius:0;background:#fff;color:#033C4F;font:inherit;font-size:16px;font-variant-numeric:tabular-nums}
+.bs-v11-fit-editor input:focus-visible{outline:2px solid #033C4F;outline-offset:2px}
+.bs-v11-fit-editor p{margin:9px 0 0;font-size:12px;line-height:1.5}
+.bs-v11-fit-visual{margin:5px 0 20px;padding:0 3px}
+.bs-v11-units:has(+ .bs-v11-fit-visual){margin-bottom:9px}
+.bs-v11-fit-track{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;height:7px}
+.bs-v11-fit-segment{display:block;background:#e5e9ea;min-width:0}
+.bs-v11-fit-segment.is-active{background:#033C4F}
+.bs-v11-fit-labels{display:flex;justify-content:space-between;gap:10px;margin-top:9px;color:#526974;font-size:11px;line-height:1.3}
+.bs-v11-fit-labels span:nth-child(2){text-align:center}
+.bs-v11-fit-labels span:last-child{text-align:right}
 `;
