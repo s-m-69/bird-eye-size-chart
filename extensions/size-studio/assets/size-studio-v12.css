@@ -1,0 +1,167 @@
+/* BSS V12: additive styles; deliberately scoped to the Size Studio namespace. */
+.bss-v12-support{margin:20px 0 25px;color:#033c4f}
+.bss-v12-subtitle{margin:0 0 21px;font-size:15px;line-height:1.4;font-weight:700}
+.bss-v12-support-track{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;height:9px;background:transparent;border-radius:30px}
+.bss-v12-support-track span{background:#e9e6e6;position:relative}
+.bss-v12-support-track span:first-child{border-radius:30px 0 0 30px}
+.bss-v12-support-track span:last-child{border-radius:0 30px 30px 0}
+.bss-v12-support-track span.is-selected:before{content:'';height:21px;width:21px;border-radius:50%;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#236b71;z-index:1;box-shadow:0 0 0 3px #fff}
+.bss-v12-track-labels{display:flex;justify-content:space-between;gap:10px;margin:15px 0 0;font-size:10px;line-height:1.5;letter-spacing:.075em;font-weight:650;color:#183e48}
+.bss-v12-track-labels span:first-child{text-align:left}.bss-v12-track-labels span:nth-child(2){text-align:center}.bss-v12-track-labels span:last-child{text-align:right}
+.bss-v12-calculator{margin:28px 0 30px;padding:24px 0;border-top:1px solid #e2e9e9;border-bottom:1px solid #e2e9e9;font-family:inherit;color:#173b47}
+.bss-v12-calculator-head{margin:0 0 20px}.bss-v12-calculator-head h3{font-size:22px;letter-spacing:-.025em;line-height:1.15;margin:0 0 7px;font-weight:650}.bss-v12-calculator-head p{margin:0;font-size:13px;color:#5c737b;line-height:1.5}
+.bss-v12-calculator-grid{display:grid;grid-template-columns:minmax(160px,41%) minmax(0,1fr);gap:28px;align-items:stretch}
+.bss-v12-image{overflow:hidden;background:#f2f3f2;min-height:270px;aspect-ratio:3/4;display:flex;justify-content:center;align-items:center}
+.bss-v12-image img{width:100%;height:100%;object-fit:cover;object-position:50% 15%}
+.bss-v12-image-placeholder{font-size:12px;letter-spacing:.025em;color:#6c7e83;text-align:center;padding:18px}
+.bss-v12-form{display:flex;flex-direction:column;gap:11px;min-width:0}
+.bss-v12-unit-choice{display:flex;gap:0;margin:0 0 8px}.bss-v12-unit-choice button{background:transparent;border:0;border-bottom:2px solid transparent;color:#75888c;min-width:42px;min-height:34px;cursor:pointer;font:inherit;font-size:12px;letter-spacing:.04em;font-weight:650}.bss-v12-unit-choice button.is-selected{color:#033c4f;border-bottom-color:#033c4f}
+.bss-v12-field{display:grid;grid-template-columns:92px 1fr 30px;gap:12px;align-items:center;font:inherit;font-size:11px;color:#3c535c;letter-spacing:.04em;text-transform:uppercase}
+.bss-v12-field input{width:100%;min-width:0;height:44px;border:0;border-bottom:1px solid #d8e0e1;background:#fff;border-radius:0;padding:7px 2px;font-family:inherit;font-size:18px;line-height:1.2;font-weight:520;color:#163842;font-variant-numeric:tabular-nums}
+.bss-v12-field input:focus-visible{outline:2px solid #236b71;outline-offset:2px}
+.bss-v12-unit{font-size:11px;color:#6e8186}
+.bss-v12-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:auto;padding-top:22px}
+.bss-v12-submit{display:inline-flex;justify-content:center;align-items:center;background:#033c4f;border:1px solid #033c4f;color:#fff;cursor:pointer;padding:12px 17px;min-height:44px;font-family:inherit;font-size:12px;font-weight:650}
+.bss-v12-submit:hover:not([disabled]){background:#124e5c}.bss-v12-submit:disabled{opacity:.45;cursor:not-allowed}
+.bss-v12-secondary{display:inline-flex;align-items:center;justify-content:center;padding:12px 5px;background:transparent;border:0;color:#033c4f;font-size:12px;text-decoration:underline;cursor:pointer}
+.bss-v12-result{margin:8px 0 0;font-size:13px;line-height:1.55;color:#2e4c54}.bss-v12-result h4{font-size:18px;margin:4px 0 7px;color:#033c4f}.bss-v12-result p{margin:5px 0}.bss-v12-fit-note{border-left:2px solid #236b71;padding:5px 0 5px 9px}.bss-v12-caution{font-size:12px;line-height:1.5;color:#69787c}
+.bss-v12-simple-units{display:flex;justify-content:center;margin:18px 0;gap:8px}.bss-v12-simple-units button{background:transparent;border:1px solid #d3e1e2;padding:6px 12px;cursor:pointer;font-size:12px}
+.bss-v12-calculator button:focus-visible,.bss-v12-simple-units button:focus-visible{outline:2px solid #236b71;outline-offset:2px}
+@media(max-width:640px){.bss-v12-calculator{margin:20px 0;padding:20px 0}.bss-v12-calculator-grid{grid-template-columns:1fr;gap:18px}.bss-v12-image{min-height:170px;max-height:210px;aspect-ratio:16/9}.bss-v12-calculator-head h3{font-size:19px}.bss-v12-field{grid-template-columns:77px 1fr 24px;gap:8px}.bss-v12-track-labels{font-size:9px}.bss-v12-actions{padding-top:10px}}
+@media(prefers-reduced-motion:reduce){.bss-v12-calculator *{scroll-behavior:auto!important}}
+
+/* Shared product-card eye-icon quick view; applies only to the injected trigger. */
+.bss-v12-quick-trigger{display:inline-flex;align-items:center;justify-content:flex-start;margin-inline-start:12px;min-height:28px;vertical-align:middle;padding:0;border:0;background:none;color:#033c4f;text-decoration:underline;text-underline-offset:3px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}.bss-v12-quick-trigger:focus-visible{outline:2px solid #033c4f;outline-offset:3px}
+.size_select > .bss-v12-quick-trigger:first-child{margin-inline-start:0;margin-bottom:8px}
+.bss__layer[data-bss-mode="modal"]{z-index:2147482000}
+
+/* BirdEye Size Studio V12.0.3 — single-viewport, two-mode experience.
+   Isolated to the V12-enhanced modal; does not change the storefront theme. */
+.bss-v12-enhanced [hidden]{display:none!important}
+.bss__layer.bss-v12-enhanced[data-bss-mode="modal"]{padding:16px}
+.bss__layer.bss-v12-enhanced[data-bss-mode="modal"] .bss__panel{
+  width:min(1190px,calc(100vw - 32px))!important;
+  max-width:1190px;max-height:calc(100dvh - 32px);
+  overflow-y:auto;overscroll-behavior:contain;
+  border-radius:3px;box-shadow:0 24px 75px rgba(0,22,31,.18)
+}
+.bss-v12-enhanced .bss__head{min-height:69px;padding:19px 62px 8px}
+.bss-v12-enhanced .bss__heading{font-size:clamp(17px,1.65vw,21px);letter-spacing:.015em;line-height:1.28}
+.bss-v12-enhanced .bss__close{top:12px;right:14px}
+.bss-v12-enhanced .bss__content{padding:0 clamp(20px,3vw,38px) 26px}
+.bss-v12-enhanced .bss-v12-calculator{margin:0;padding:0;border:0}
+.bss-v12-enhanced .bss-v12-calculator-grid{display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr);gap:clamp(24px,4vw,52px);align-items:stretch}
+.bss-v12-enhanced .bss-v12-image{
+  aspect-ratio:unset;min-height:0;height:min(575px,calc(100dvh - 154px));
+  max-height:575px;background:#f5f6f5;align-self:stretch
+}
+.bss-v12-enhanced .bss-v12-image img{width:100%;height:100%;object-fit:cover;object-position:center 24%}
+.bss-v12-enhanced .bss-v12-form{display:flex;flex-direction:column;gap:0;min-width:0;padding:5px 0 3px}
+.bss-v12-enhanced .bss-v12-calculator-head{margin:0 0 10px}
+.bss-v12-enhanced .bss-v12-calculator-head h3{font-size:clamp(21px,2.05vw,26px);line-height:1.2;margin:0 0 5px;font-weight:690;letter-spacing:-.025em}
+.bss-v12-enhanced .bss-v12-calculator-head p{font-size:12px;line-height:1.45;color:#637985}
+.bss-v12-enhanced .bss-v12-unit-choice{display:flex;gap:3px;margin:0 0 13px;min-height:30px}
+.bss-v12-enhanced .bss-v12-unit-choice button{min-height:29px;min-width:37px;padding:5px 6px 7px;font-size:12px;font-weight:650;line-height:1.15;letter-spacing:.035em}
+.bss-v12-enhanced .bss-v12-insights{display:grid;gap:14px;margin:0 0 16px;padding:2px 0 1px}
+.bss-v12-enhanced .bss-v12-compact-fit,.bss-v12-enhanced .bss-v12-compact-support{margin:0;padding:0;color:#033c4f}
+.bss-v12-enhanced .bss-v12-info-title{display:flex;justify-content:space-between;gap:16px;align-items:baseline;margin:0 0 10px;font-size:11px;font-weight:700;line-height:1.2}
+.bss-v12-enhanced .bss-v12-info-value{font-size:10px;font-weight:500;color:#607782;text-align:right}
+.bss-v12-enhanced .bss__fit-track{height:7px;gap:4px}
+.bss-v12-enhanced .bss__fit-labels{margin-top:7px;font-size:9px;line-height:1.3;font-weight:500;letter-spacing:.01em;color:#73868d}
+.bss-v12-enhanced .bss-v12-support-track{height:7px;gap:4px}
+.bss-v12-enhanced .bss-v12-support-track span.is-selected:before{width:13px;height:13px;box-shadow:0 0 0 2px #fff}
+.bss-v12-enhanced .bss-v12-track-labels{margin:7px 0 0;font-size:9px;letter-spacing:.025em;font-weight:500;line-height:1.3;color:#73868d}
+.bss-v12-enhanced .bss-v12-inputs{display:grid;gap:7px;margin:0}
+.bss-v12-enhanced .bss-v12-field{grid-template-columns:minmax(77px,95px) minmax(0,1fr) 28px;gap:10px;font-size:10px;letter-spacing:.025em;font-weight:570;line-height:1.3;color:#49636d}
+.bss-v12-enhanced .bss-v12-field input{height:40px;font-size:15px;font-weight:500;padding:6px 3px;letter-spacing:0;text-transform:none}
+.bss-v12-enhanced .bss-v12-field input::placeholder{font-size:13px;font-weight:400;color:#8a969b;opacity:1}
+.bss-v12-enhanced .bss-v12-unit{font-size:10px;letter-spacing:0;color:#7b8c91}
+.bss-v12-enhanced .bss-v12-actions{display:flex;justify-content:flex-start;align-items:center;gap:18px;margin-top:auto;padding:20px 0 0}
+.bss-v12-enhanced .bss-v12-submit,.bss-v12-enhanced .bss-v12-secondary.is-primary{min-height:42px;padding:10px 18px;font-size:12px;font-weight:650;white-space:nowrap}
+.bss-v12-enhanced .bss-v12-secondary{min-height:42px;padding:8px 0;font-size:11px;text-decoration-thickness:1px;text-underline-offset:4px}
+.bss-v12-enhanced .bss-v12-secondary.is-primary{background:#033c4f;border:1px solid #033c4f;color:white;text-decoration:none}
+.bss-v12-enhanced .bss-v12-result{margin:12px 0 0;font-size:12px;line-height:1.45}
+.bss-v12-enhanced .bss-v12-result:empty{display:none}
+.bss-v12-enhanced .bss-v12-result h4{margin:0 0 5px;font-size:16px}
+.bss-v12-enhanced .bss-v12-result p{margin:4px 0}
+.bss-v12-enhanced .bss-v12-fit-note{padding:2px 0 2px 8px}
+.bss-v12-enhanced .bss-v12-caution{font-size:10.5px;line-height:1.4;margin:11px 0 0;color:#73868d;max-width:420px}
+/* The chart view remains available, but never shares the viewport with the form. */
+.bss-v12-enhanced .bss-v12-chart-navigation{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:3px 0 14px;padding:0 0 13px;border-bottom:1px solid #e9eef0}
+.bss-v12-enhanced .bss-v12-chart-navigation h3{margin:0;font-size:15px;color:#033c4f;font-weight:680}
+.bss-v12-enhanced .bss-v12-back{padding:7px 0;background:none;border:0;color:#033c4f;font:inherit;font-size:11px;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__units-row{margin:2px 0 14px;min-height:34px}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__fit-scale{margin:0 auto 15px}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-support{margin:12px auto 20px;max-width:660px}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-subtitle{font-size:12px;margin-bottom:12px}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-track-labels{font-size:9px}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__table-scroll{max-height:calc(100dvh - 290px);overflow:auto}
+/* Existing PDP click handler can leave a legacy quick-view link. Hide it only
+   when the new, product-bound global quick-view trigger is present. */
+[data-bss-v12-owns-quickview="true"] .bss-v9-trigger{display:none!important}
+[data-bss-v12-owns-quickview="true"] .bss-v12-quick-trigger{margin-inline-start:12px;font-size:11px;white-space:nowrap}
+.bss-v12-quick-trigger:focus-visible,.bss-v12-back:focus-visible{outline:2px solid #033c4f;outline-offset:3px}
+@media(max-width:760px){
+  .bss__layer.bss-v12-enhanced[data-bss-mode="modal"]{padding:8px}
+  .bss__layer.bss-v12-enhanced[data-bss-mode="modal"] .bss__panel{width:calc(100vw - 16px)!important;max-height:calc(100dvh - 16px)}
+  .bss-v12-enhanced .bss__head{min-height:60px;padding:15px 46px 9px}
+  .bss-v12-enhanced .bss__heading{font-size:16px}
+  .bss-v12-enhanced .bss__close{right:7px;top:9px}
+  .bss-v12-enhanced .bss__content{padding:0 17px 20px}
+  .bss-v12-enhanced .bss-v12-calculator-grid{grid-template-columns:minmax(0,1fr);gap:14px}
+  .bss-v12-enhanced .bss-v12-image{width:100%;height:165px;max-height:165px;min-height:0}
+  .bss-v12-enhanced .bss-v12-image img{object-position:center 20%}
+  .bss-v12-enhanced .bss-v12-calculator-head h3{font-size:21px}
+  .bss-v12-enhanced .bss-v12-form{padding:0}
+  .bss-v12-enhanced .bss-v12-insights{gap:13px;margin-bottom:16px}
+  .bss-v12-enhanced .bss-v12-field{grid-template-columns:85px minmax(0,1fr) 22px}
+  .bss-v12-enhanced .bss-v12-actions{padding-top:16px}
+  .bss-v12-enhanced[data-bss-v12-view="chart"] .bss__table-scroll{max-height:calc(100dvh - 240px)}
+}
+@media(max-height:710px) and (min-width:761px){
+  .bss-v12-enhanced .bss__head{min-height:56px;padding-top:12px;padding-bottom:6px}
+  .bss-v12-enhanced .bss__content{padding-bottom:14px}
+  .bss-v12-enhanced .bss-v12-image{height:calc(100dvh - 116px)}
+  .bss-v12-enhanced .bss-v12-insights{gap:9px;margin-bottom:11px}
+  .bss-v12-enhanced .bss-v12-calculator-head{margin-bottom:6px}
+  .bss-v12-enhanced .bss-v12-actions{padding-top:13px}
+}
+@media(prefers-reduced-motion:reduce){.bss-v12-enhanced *{scroll-behavior:auto!important}}
+
+/* V12.0.4 — chart first; an opt-in calculator only after body ranges are approved. */
+.bss-v12-enhanced .bss-v12-chart-navigation{flex-direction:row-reverse;justify-content:space-between}
+.bss-v12-enhanced .bss-v12-chart-navigation h3{margin-right:auto}
+.bss-v12-enhanced .bss-v12-find{border:1px solid #033c4f;background:#033c4f;color:#fff;cursor:pointer;font:inherit;font-size:12px;font-weight:600;padding:9px 15px;min-height:38px}
+.bss-v12-enhanced .bss-v12-find:hover{background:#14576a}
+.bss-v12-enhanced .bss-v12-find:focus-visible{outline:2px solid #033c4f;outline-offset:3px}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-chart-navigation{margin:4px 0 10px}
+.bss-v12-quick-error{display:block;font-size:11px;color:#586e75;margin-top:5px;line-height:1.4}
+.bss-v12-quick-error a{text-decoration:underline;color:#033c4f}
+
+/* Never reserve a blank image column when the merchant has not selected a guide. */
+.bss-v12-enhanced .bss-v12-no-image{grid-template-columns:minmax(0,1fr);max-width:680px;margin-inline:auto}
+
+/* V12.0.5: Stable central modal, correct visibility and restrained typography. */
+.bss-v12-enhanced .bss-v12-chart-navigation{margin:2px 0 10px;padding-bottom:11px}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__units-row{margin:0 0 16px;min-height:30px}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__units button{font-size:12px}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__fit-scale{margin:0 auto 18px}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-support{margin:15px auto 18px}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__table-scroll{overflow:auto;max-height:min(55dvh,540px)}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__table th,
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__table td{font-size:12px;line-height:1.4}
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss-v12-unit-choice{margin-bottom:13px}
+.bss-v12-enhanced .bss-v12-field{font-size:10px;letter-spacing:.02em}
+.bss-v12-enhanced .bss-v12-chart-navigation h3{font-size:15px}
+.bss-v12-enhanced .bss-v12-subtitle{font-size:12px}
+/* Protect chart-only cases against other scripts forcing hidden views visible. */
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-calculator,
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss__table-scroll,
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss__units-row,
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss__fit-scale,
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss-v12-chart-navigation,
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss-v12-support{display:none!important}
+@media(max-width:760px){
+  .bss-v12-enhanced[data-bss-v12-view="chart"] .bss__table-scroll{max-height:calc(100dvh - 255px)}
+  .bss-v12-enhanced[data-bss-v12-view="calculator"] .bss-v12-calculator-grid{display:grid}
+}
