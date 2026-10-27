@@ -1,9 +1,9 @@
-/* BirdEye Size Studio V12.1.1 – chart-level guide image + stable, reference-led modal. */
+/* BirdEye Size Studio V12.1.2 – guarded close and background scroll lock. */
 (function (global) {
   'use strict';
   if (global.__BSS_V12_LOADED__) return;
   global.__BSS_V12_LOADED__ = true;
-  global.__BSS_V12_BUILD__ = '12.1.1';
+  global.__BSS_V12_BUILD__ = '12.1.2';
   const toInches = (n, unit) => unit === 'cm' ? n / 2.54 : n;
   const display = (s) => String(s ?? '').trim();
   const labels = ['Runs small','Runs slightly small','True to size','Runs slightly large','Runs large'];
@@ -123,6 +123,85 @@
       support_level:hasBar(chart)?chart.supportLevel:null,
       support_type:hasBar(chart)?barKind(chart).toLowerCase():null};
     try{global.Shopify?.analytics?.publish?.('birdeye_size_studio:'+event,payload)}catch(_err){/* privacy/analytics failure never breaks sizing */}
+  }
+  // V12.1.2: lock the entire storefront document, not just body overflow.
+  // Capture values before the legacy PDP controller mutates them, then restore
+  // exactly those inline values on close (including theme Quick View locks).
+  let scrollLock = null;
+  let pendingPreOpen = null;
+  let dismissGuardUntil = 0;
+  const lockProps = {
+    html: ['overflow', 'overscroll-behavior'],
+    body: ['position', 'top', 'left', 'right', 'width', 'overflow', 'overscroll-behavior']
+  };
+  const snapshotStyle = (el, names) => names.map(name => ({
+    name, value: el.style.getPropertyValue(name), priority: el.style.getPropertyPriority(name)
+  }));
+  function capturePreOpen() {
+    if (scrollLock || pendingPreOpen) return;
+    pendingPreOpen = {
+      y: global.scrollY || doc.documentElement.scrollTop || 0,
+      html: snapshotStyle(doc.documentElement, lockProps.html),
+      body: snapshotStyle(doc.body, lockProps.body)
+    };
+  }
+  function restoreStyles(el, props) {
+    for (const prop of props) {
+      if (prop.value) el.style.setProperty(prop.name, prop.value, prop.priority);
+      else el.style.removeProperty(prop.name);
+    }
+  }
+  function lockBackground() {
+    if (scrollLock) return;
+    const initial = pendingPreOpen || {
+      y: global.scrollY || doc.documentElement.scrollTop || 0,
+      html: snapshotStyle(doc.documentElement, lockProps.html),
+      body: snapshotStyle(doc.body, lockProps.body)
+    };
+    pendingPreOpen = null;
+    scrollLock = initial;
+    doc.documentElement.style.setProperty('overflow', 'hidden', 'important');
+    doc.documentElement.style.setProperty('overscroll-behavior', 'none', 'important');
+    const body = doc.body.style;
+    body.setProperty('position', 'fixed', 'important');
+    body.setProperty('top', `-${initial.y}px`, 'important');
+    body.setProperty('left', '0', 'important');
+    body.setProperty('right', '0', 'important');
+    body.setProperty('width', '100%', 'important');
+    body.setProperty('overflow', 'hidden', 'important');
+    body.setProperty('overscroll-behavior', 'none', 'important');
+    doc.documentElement.classList.add('bss-v12-scroll-locked');
+  }
+  function unlockBackground() {
+    if (!scrollLock) { pendingPreOpen = null; return; }
+    const initial = scrollLock;
+    scrollLock = null;
+    doc.documentElement.classList.remove('bss-v12-scroll-locked');
+    restoreStyles(doc.body, initial.body);
+    restoreStyles(doc.documentElement, initial.html);
+    // Restore the scroll offset after releasing fixed positioning.
+    if (Math.abs((global.scrollY || 0) - initial.y) > 1) global.scrollTo(0, initial.y);
+  }
+  function syncBackgroundScroll() {
+    const open = Array.from(doc.querySelectorAll('[data-bss-layer].bss-v12-enhanced'))
+      .some(layer => layer.isConnected && !layer.hidden);
+    if (open) lockBackground();
+    else unlockBackground();
+  }
+  // The legacy PDP handler owns the close operation. Run our guard after its
+  // listener on the same layer, and suppress click bubbling to theme handlers.
+  function guardClose(layer) {
+    if (layer.dataset.bssV12CloseGuard === 'true') return;
+    layer.dataset.bssV12CloseGuard = 'true';
+    layer.addEventListener('click', event => {
+      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+      if (!target?.closest('[data-bss-close], .bss__close, .bss__scrim')) return;
+      dismissGuardUntil = Date.now() + 350;
+      event.preventDefault();
+      event.stopPropagation();
+      // Legacy close may move the layer back under its app block synchronously.
+      queueMicrotask(syncBackgroundScroll);
+    });
   }
   function supportBar(chart) {
     if(!hasBar(chart))return null;
@@ -263,6 +342,7 @@
     const content=layer.querySelector('[data-bss-content]');if(!content)return;
     const view=mode==='chart'?'chart':'calculator';
     layer.dataset.bssV12View=view;layer.classList.add('bss-v12-enhanced');
+    guardClose(layer);
     const calculator=content.querySelector('.bss-v12-calculator');
     const table=content.querySelector('.bss__table-scroll');
     const originalUnits=content.querySelector('.bss__units-row');
@@ -511,6 +591,7 @@
   }
   function rowErrorClear(button){button.parentElement?.querySelector('.bss-v12-quick-error')?.remove()}
   function popup(data,opener){
+    capturePreOpen();
     const root=create('div','bss bss-v12-quick-root');
     root.dataset.bssHandle=data.chartHandle||'';root.dataset.bssProductId=data.productId||'';
     root.dataset.bssProductHandle=data.handle||'';root.dataset.bssQuickView='true';
@@ -566,8 +647,8 @@
     panel.append(head,content);layer.append(scrim,panel);root.append(layer);doc.body.append(root);
     enhanceLayer(layer,root,data.chart);
     const prev=doc.activeElement;const overflow=doc.body.style.overflow;
-    doc.body.style.overflow='hidden';panel.focus();
-    function dismiss(){doc.removeEventListener('keydown',keys,true);root.remove();doc.body.style.overflow=overflow;(prev?.isConnected?prev:opener)?.focus()}
+    doc.body.style.overflow='hidden';syncBackgroundScroll();panel.focus();
+    function dismiss(){doc.removeEventListener('keydown',keys,true);root.remove();doc.body.style.overflow=overflow;syncBackgroundScroll();(prev?.isConnected?prev:opener)?.focus()}
     function keys(e){
       if(e.key==='Escape'){e.preventDefault();dismiss();return;}
       if(e.key!=='Tab')return;
@@ -580,15 +661,26 @@
     scrim.addEventListener('click',dismiss);close.addEventListener('click',dismiss);doc.addEventListener('keydown',keys,true);
   }
   let raf=0;
-  function scan(){scanLayers();scanQuickviews()}
+  function scan(){scanLayers();scanQuickviews();syncBackgroundScroll()}
   function schedule(){if(raf)return;raf=requestAnimationFrame(()=>{raf=0;scan()})}
   // The V10 PDP script listens for .bss-v9-trigger on document capture.
   // An earlier window-capture handler can prevent it from incorrectly opening
   // a PDP chart when a legacy Quick View trigger is clicked.
   global.addEventListener('click',e=>{
+    const element = e.target instanceof Element ? e.target : e.target?.parentElement;
+    const clickClose = element?.closest?.('[data-bss-close],.bss__close,.bss__scrim');
+    if (clickClose?.closest('[data-bss-layer].bss-v12-enhanced')) {
+      dismissGuardUntil = Date.now() + 350;
+      queueMicrotask(syncBackgroundScroll);
+      return; // Preserve legacy PDP and Quick View close handlers.
+    }
     const el=e.target?.closest?.('[data-bss-v12-quick-trigger],.bss-v9-trigger');
     if(!el)return;
+    if (Date.now() < dismissGuardUntil) {
+      e.preventDefault();e.stopImmediatePropagation();return;
+    }
     const drawer=el.closest(QUICKVIEWS);
+    if (!drawer) { capturePreOpen(); setTimeout(syncBackgroundScroll, 0); }
     if(!drawer && !el.matches('[data-bss-v12-quick-trigger]'))return;
     // Never hijack the normal product-page Size Studio link.
     if(!drawer)return;
@@ -599,8 +691,9 @@
   doc.addEventListener('click',e=>{
     const el=e.target?.closest?.('[data-bss-v12-quick-trigger]');
     if(!el)return;
+    if(Date.now()<dismissGuardUntil){e.preventDefault();e.stopImmediatePropagation();return;}
     e.preventDefault();e.stopPropagation();quickviewClick(el);
   },true);
-  function init(){scan();const observer=new MutationObserver(records=>{if(records.some(r=>r.addedNodes.length||r.removedNodes.length))schedule()});observer.observe(doc.body,{subtree:true,childList:true});doc.addEventListener('shopify:section:load',schedule)}
+  function init(){scan();const observer=new MutationObserver(records=>{if(records.some(r=>r.addedNodes.length||r.removedNodes.length||r.attributeName==='hidden'))schedule()});observer.observe(doc.body,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden']});doc.addEventListener('shopify:section:load',schedule)}
   if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })(typeof window!=='undefined'?window:globalThis);
