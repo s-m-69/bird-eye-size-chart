@@ -596,3 +596,31 @@
     margin:5px 0 9px!important;min-height:25px!important;
   }
 }
+
+/* V13.0.0 — Support/Compression use the exact five-segment Fit treatment.
+   Normal-case labels and no circular indicator; existing numeric rating retained. */
+.bss-v12-enhanced .bss-v12-support .bss__fit-track,
+.bss-v12-enhanced .bss-v12-compact-support .bss__fit-track{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;height:7px;
+  background:transparent;border:0;overflow:visible;
+}
+.bss-v12-enhanced .bss-v12-support .bss__fit-segment,
+.bss-v12-enhanced .bss-v12-compact-support .bss__fit-segment{
+  min-width:0;background:#dfe8eb;border:0;border-radius:0;
+}
+.bss-v12-enhanced .bss-v12-support .bss__fit-segment.is-active,
+.bss-v12-enhanced .bss-v12-compact-support .bss__fit-segment.is-active{
+  background:#033c4f;
+}
+.bss-v12-enhanced .bss-v12-support .bss__fit-labels,
+.bss-v12-enhanced .bss-v12-compact-support .bss__fit-labels{
+  display:flex;justify-content:space-between;gap:8px;margin-top:7px;
+  font-family:inherit;font-size:9px;line-height:1.3;font-weight:500;
+  letter-spacing:.01em;color:#73868d;text-transform:none!important;
+}
+.bss-v12-enhanced .bss-v12-support .bss__fit-labels span:first-child,
+.bss-v12-enhanced .bss-v12-compact-support .bss__fit-labels span:first-child{text-align:left}
+.bss-v12-enhanced .bss-v12-support .bss__fit-labels span:nth-child(2),
+.bss-v12-enhanced .bss-v12-compact-support .bss__fit-labels span:nth-child(2){text-align:center}
+.bss-v12-enhanced .bss-v12-support .bss__fit-labels span:last-child,
+.bss-v12-enhanced .bss-v12-compact-support .bss__fit-labels span:last-child{text-align:right}
