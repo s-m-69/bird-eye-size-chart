@@ -598,3 +598,33 @@
   .bss-v12-enhanced .bss-v12-actions {padding-top:4px!important;}
   .bss-v12-enhanced .bss-v12-submit{min-width:160px!important;}
 }
+
+/* V12.1.2: slight scale reduction; same fixed frame in either view. */
+.bss__layer.bss-v12-enhanced[data-bss-mode="modal"] {
+  position:fixed!important; inset:0!important; z-index:2147483647!important;
+  isolation:isolate!important; pointer-events:auto!important;
+}
+.bss__layer.bss-v12-enhanced[data-bss-mode="modal"] .bss__panel {
+  width:min(1010px,calc(100vw - 48px))!important;
+  max-width:1010px!important;
+  height:min(630px,calc(100dvh - 46px))!important;
+  max-height:calc(100dvh - 46px)!important;
+}
+.bss-v12-enhanced .bss-v12-image {
+  height:min(48dvh,405px)!important; max-height:405px!important; min-height:240px!important;
+}
+.bss-v12-enhanced .bss-v12-image img {object-fit:contain!important;object-position:center center!important;}
+.bss__layer.bss-v12-enhanced .bss__scrim {touch-action:none!important;}
+.bss__layer.bss-v12-enhanced .bss__panel {
+  overscroll-behavior:contain!important; pointer-events:auto!important;
+}
+.bss__layer.bss-v12-enhanced .bss__content {overscroll-behavior:contain!important;}
+@media(max-width:760px){
+  .bss__layer.bss-v12-enhanced[data-bss-mode="modal"] .bss__panel {
+    width:calc(100vw - 24px)!important; max-width:calc(100vw - 24px)!important;
+    height:calc(100dvh - 26px)!important; max-height:calc(100dvh - 26px)!important;
+  }
+  .bss-v12-enhanced .bss-v12-image {
+    height:min(22dvh,170px)!important; min-height:95px!important; max-height:170px!important;
+  }
+}
