@@ -1,4 +1,4 @@
-/* BirdEye Size Studio V12.1.3 – chart height, real close and hard background scroll lock. */
+/* BirdEye Size Studio V12.1.5 – minimal chart headings, units order and image frame polish. */
 (function (global) {
   'use strict';
   if (global.__BSS_V12_LOADED__) return;
@@ -386,7 +386,18 @@
     if(content.dataset.bssV12Initialized==='true' && content.querySelector('.bss-v12-chart-navigation'))return false;
     const table=content.querySelector('.bss__table-scroll');if(!table)return false;
     content.dataset.bssV12Initialized='true';
+    // Label only the Fit scale that is actually present. Both PDP and
+    // shared Quick View already render the same .bss__fit-scale element.
+    const fitScale=content.querySelector('.bss__fit-scale');
+    if(fitScale && !fitScale.querySelector('.bss-v12-fit-title')){
+      fitScale.prepend(create('h3','bss-v12-fit-title','Fit'));
+    }
     const bar=supportBar(chart);if(bar)table.before(bar);
+    // Preserve the original IN/CM buttons and their event listeners. Move
+    // only their container immediately before the table (after visible bars).
+    // This is repeated by enhanceLayer if the legacy PDP unit handler repaints.
+    const unitRow=content.querySelector('.bss__units-row');
+    if(unitRow)table.before(unitRow);
     const unit=content.querySelector('[data-bss-unit].is-selected')?.dataset.bssUnit||'in';
     const navigation=create('div','bss-v12-chart-navigation');
     const tabs=create('div','bss-v12-tabs');tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Size guide views');

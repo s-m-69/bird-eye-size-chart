@@ -565,3 +565,34 @@
 .bss__layer.bss-v12-enhanced .bss__scrim{z-index:0!important}
 .bss__layer.bss-v12-enhanced .bss__panel{position:relative!important;z-index:1!important}
 .bss__layer.bss-v12-enhanced .bss__close{pointer-events:auto!important;cursor:pointer!important}
+
+/* V12.1.5: Brand-consistent chart scale labels, units before the table,
+   and a seamless white measurement-image panel. All controls stay in V12. */
+.bss-v12-enhanced .bss-v12-image{background:#fff!important}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-fit-title,
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-support .bss-v12-subtitle{
+  display:block!important;width:100%!important;
+  margin:0 0 8px!important;padding:0!important;
+  text-align:center!important;color:#033c4f!important;
+  font-family:inherit!important;font-size:12px!important;font-weight:700!important;
+  line-height:1.35!important;letter-spacing:.01em!important;
+}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-support-track span.is-selected{
+  background:#033c4f!important;
+}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-support-track span.is-selected::before{
+  background:#033c4f!important;
+  box-shadow:0 0 0 3px #fff!important;
+}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__units-row{
+  margin:8px 0 12px!important;min-height:27px!important;
+}
+@media(max-width:650px){
+  .bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-fit-title,
+  .bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-support .bss-v12-subtitle{
+    font-size:11px!important;margin-bottom:6px!important;
+  }
+  .bss-v12-enhanced[data-bss-v12-view="chart"] .bss__units-row{
+    margin:5px 0 9px!important;min-height:25px!important;
+  }
+}
