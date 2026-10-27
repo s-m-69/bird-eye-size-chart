@@ -486,6 +486,27 @@ export default function SizeChartsPage() {
                 </label>
                 <p className="bs-v11-muted">1 Runs Small · 2 Slightly Small · 3 True to Size · 4 Slightly Large · 5 Runs Large. Leave blank to hide.</p>
               </div>
+              {/* BSS_V12_1_1 — one optional measurement guide image per chart. */}
+              <section aria-label="Find My Size measurement image" style={{margin:'14px 0 20px',padding:'17px 20px',border:'1px solid #e3ebed',background:'#fbfcfc'}}>
+                <label className="bs-v11-label" htmlFor="bs-v12-measurement-image">Find My Size — measurement image (optional)
+                  <input id="bs-v12-measurement-image" type="url" inputMode="url" maxLength={2048}
+                    placeholder="https://cdn.shopify.com/..."
+                    value={draft.data.measurementImageUrl ?? ''}
+                    onChange={(event) => {
+                      const url = event.currentTarget.value;
+                      modify((d) => {
+                        if (!url.trim()) delete d.data.measurementImageUrl;
+                        else d.data.measurementImageUrl = url;
+                      });
+                    }}/>
+                </label>
+                <p className="bs-v11-muted" style={{margin:'7px 0 0',fontSize:12}}>Upload your annotated measuring image in Shopify Admin → Content → Files, copy its HTTPS link and paste it here. This image will be used for every product assigned to this chart. Leave blank to use the global fallback image.</p>
+                {draft.data.measurementImageUrl && draft.data.measurementImageUrl.startsWith('https://') && (
+                  <div style={{display:'flex',justifyContent:'center',alignItems:'center',height:150,maxWidth:260,overflow:'hidden',background:'#f2f5f5',marginTop:12}}>
+                    <img src={draft.data.measurementImageUrl} alt="Measurement image preview" style={{width:'100%',height:'100%',objectFit:'contain',objectPosition:'center'}}/>
+                  </div>
+                )}
+              </section>
               {/* BSS_V12_0_0 — optional support attribute and body-range approval. */}
               <section className="bs-v12-settings" aria-label="Support and size recommendations">
                 {/* BSS_V12_0_7_SUPPORT_COMPRESSION — one optional 1–5 bar per chart. */}
