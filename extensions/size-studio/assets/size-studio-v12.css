@@ -247,384 +247,321 @@
 }
 
 
-/* ==============================================================
- * BIRD EYE SIZE STUDIO V12.1.0 — REFERENCE-LED FINAL PRESENTATION
- * Strictly scoped to V12-enriched Size Studio. The earlier legacy
- * declarations remain to preserve the old theme; these rules win.
- * ============================================================= */
+
+/* ===== BirdEye Size Studio V12.1.3 | Single-viewport layout correction =====
+   Scoped to the V12 modal. The chart sizes to its content; the calculator
+   uses image-left/form-right on desktop and a compact stacked mobile view.
+   Never require scrolling within the Size Studio modal for standard charts. */
 .bss__layer.bss-v12-enhanced[data-bss-mode="modal"] {
-  padding:clamp(12px,2.5vh,28px)!important;
+  position:fixed!important;inset:0!important;
   display:flex!important;align-items:center!important;justify-content:center!important;
-  box-sizing:border-box;
+  padding:12px!important;box-sizing:border-box!important;
+  z-index:2147483647!important;isolation:isolate!important;
+  overflow:hidden!important;
 }
 .bss__layer.bss-v12-enhanced[data-bss-mode="modal"] .bss__panel {
+  display:flex!important;flex-direction:column!important;
   box-sizing:border-box!important;
-  width:min(1140px,calc(100vw - 48px))!important;
-  max-width:1140px!important;
-  max-height:calc(100dvh - 40px)!important;
-  min-height:0!important;
-  margin:auto!important;
-  overflow-y:auto!important;
-  overflow-x:hidden!important;
-  background:#fff!important;
-  border-radius:12px!important;
-  box-shadow:0 24px 65px rgba(0,0,0,.20)!important;
+  width:min(960px,calc(100vw - 28px))!important;
+  max-width:960px!important;
+  max-height:calc(100dvh - 24px)!important;
+  min-height:0!important;height:auto!important;
+  margin:auto!important;padding:0!important;
+  overflow:hidden!important;overscroll-behavior:contain!important;
+  border-radius:12px!important;background:#fff!important;
+  box-shadow:0 18px 50px rgba(0,0,0,.18)!important;
 }
-.bss-v12-enhanced .bss__head{
-  min-height:56px!important;padding:19px 65px 8px!important;
-  display:flex!important;align-items:center!important;justify-content:center!important;
+.bss-v12-enhanced .bss__head {
+  flex:0 0 auto!important;position:relative!important;
+  display:flex!important;justify-content:center!important;align-items:center!important;
+  min-height:52px!important;padding:12px 54px 6px!important;
+  box-sizing:border-box!important;
 }
-.bss-v12-enhanced .bss__heading{
-  font-size:clamp(17px,1.42vw,21px)!important;
-  line-height:1.25!important;font-weight:720!important;
-  letter-spacing:.025em!important;text-transform:uppercase!important;
-  margin:0!important;text-align:center!important;color:#033c4f!important;
+.bss-v12-enhanced .bss__heading {
+  margin:0!important;text-align:center!important;
+  font-size:clamp(16px,1.35vw,20px)!important;
+  color:#033c4f!important;font-weight:720!important;
+  letter-spacing:.02em!important;line-height:1.2!important;
 }
-.bss-v12-enhanced .bss__close{top:13px!important;right:18px!important;z-index:3!important}
-.bss-v12-enhanced .bss__content{padding:0 clamp(24px,3.7vw,48px) 28px!important}
-/* Centered, equal-width dark segmented pill; teal is the active state. */
+.bss-v12-enhanced .bss__close{top:8px!important;right:11px!important;z-index:5!important}
+.bss-v12-enhanced .bss__content {
+  display:flex!important;flex-direction:column!important;
+  flex:0 1 auto!important;min-height:0!important;
+  margin:0!important;padding:0 clamp(18px,3vw,36px) 18px!important;
+  box-sizing:border-box!important;overflow:hidden!important;
+  scrollbar-width:none!important;overscroll-behavior:contain!important;
+}
+.bss-v12-enhanced .bss__content::-webkit-scrollbar{display:none!important}
+.bss-v12-enhanced [hidden]{display:none!important}
+/* White two-way pill, centered, with active teal on both tabs. */
 .bss-v12-enhanced .bss-v12-chart-navigation,
 .bss-v12-enhanced[data-bss-v12-view="calculator"] .bss-v12-chart-navigation,
 .bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-chart-navigation {
-  display:flex!important;align-items:center!important;justify-content:center!important;
-  padding:3px 0 15px!important;margin:0 auto 5px!important;
-  border:0!important;position:relative!important;
+  display:flex!important;justify-content:center!important;align-items:center!important;
+  flex:0 0 auto!important;border:0!important;
+  margin:0 auto 12px!important;padding:0!important;
 }
-.bss-v12-enhanced .bss-v12-tabs{
-  display:grid!important;grid-template-columns:1fr 1fr!important;
-  width:min(470px,100%)!important;
+.bss-v12-enhanced .bss-v12-tabs {
+  width:min(450px,100%)!important;box-sizing:border-box!important;
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
   padding:4px!important;gap:4px!important;
-  background:#1e1e1e!important;border-radius:999px!important;
-  box-sizing:border-box!important;
+  border:1px solid #e1e8ea!important;
+  border-radius:999px!important;background:white!important;
+  box-shadow:none!important;
 }
-.bss-v12-enhanced .bss-v12-tab{
+.bss-v12-enhanced .bss-v12-tab {
   display:flex!important;align-items:center!important;justify-content:center!important;
-  border:0!important;border-radius:999px!important;
-  min-width:0!important;min-height:42px!important;
-  padding:9px 12px!important;background:transparent!important;
-  color:#f4f5f5!important;font-family:inherit!important;
-  font-size:13px!important;font-weight:550!important;letter-spacing:0!important;
-  box-shadow:none!important;text-decoration:none!important;
+  min-height:40px!important;min-width:0!important;
+  padding:8px 10px!important;border:0!important;border-radius:999px!important;
+  background:white!important;color:#173b47!important;
+  font:inherit!important;font-size:12px!important;font-weight:600!important;
+  line-height:1.2!important;text-align:center!important;cursor:pointer!important;
 }
-.bss-v12-enhanced .bss-v12-tab.is-active{
-  background:#033c4f!important;color:#fff!important;box-shadow:none!important;
-}
-.bss-v12-enhanced .bss-v12-tab:focus-visible{
-  outline:2px solid #fff!important;outline-offset:-5px!important;
-}
-/* Render exactly one view at a time. */
+.bss-v12-enhanced .bss-v12-tab.is-active{background:#033c4f!important;color:#fff!important}
+.bss-v12-enhanced .bss-v12-tab:focus-visible{outline:2px solid #033c4f!important;outline-offset:2px!important}
+.bss-v12-enhanced .bss-v12-tab:disabled{cursor:not-allowed;opacity:.5!important}
+/* Never stack the measurement table below the calculator. */
 .bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-calculator,
-.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss__table-scroll,
 .bss-v12-enhanced[data-bss-v12-view="calculator"] .bss__units-row,
 .bss-v12-enhanced[data-bss-v12-view="calculator"] .bss__fit-scale,
-.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss-v12-support {display:none!important}
-/* Chart first: centered IN / CM and product details in their own view. */
-.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__units-row{
-  display:flex!important;justify-content:center!important;margin:6px auto 20px!important;
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss-v12-support,
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss__table-scroll,
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss-v12-insights {display:none!important}
+/* Chart: auto height from the visible Fit/Support bars and number of size rows. */
+.bss__layer.bss-v12-enhanced[data-bss-mode="modal"][data-bss-v12-view="chart"] .bss__panel {
+  height:auto!important;min-height:0!important;
 }
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__content {flex:0 1 auto!important}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__units-row {
+  display:flex!important;justify-content:center!important;align-items:center!important;
+  min-height:30px!important;margin:1px 0 10px!important;
+}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__units button{font-size:12px!important}
 .bss-v12-enhanced[data-bss-v12-view="chart"] .bss__fit-scale,
-.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-support{
-  max-width:700px!important;margin:16px auto 23px!important;
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-support {
+  flex:0 0 auto!important;max-width:680px!important;
+  width:100%!important;margin:9px auto 15px!important;
 }
-.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__table-scroll{
-  max-height:min(52dvh,490px)!important;overflow:auto!important;
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-subtitle {
+  font-size:12px!important;margin:0 0 8px!important;
 }
-/* Find My Size: photograph left, reference-sized form right. */
-.bss-v12-enhanced .bss-v12-calculator{
-  display:block!important;border:0!important;margin:0!important;padding:2px 0 0!important;
-  min-width:0!important;
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-support-track {grid-template-columns:repeat(5,minmax(0,1fr))!important;height:7px!important}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-track-labels{font-size:9px!important;margin-top:7px!important}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__table-scroll {
+  flex:0 1 auto!important;max-height:none!important;
+  height:auto!important;margin:0!important;
+  overflow:visible!important;
 }
-.bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-calculator{display:none!important}
-.bss-v12-enhanced .bss-v12-calculator-grid{
-  display:grid!important;grid-template-columns:minmax(0,42%) minmax(0,58%)!important;
-  gap:clamp(22px,3.5vw,54px)!important;align-items:stretch!important;
-  max-width:100%!important;min-width:0!important;
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__table {margin:0!important;width:100%!important}
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__table th,
+.bss-v12-enhanced[data-bss-v12-view="chart"] .bss__table td {
+  font-size:12px!important;line-height:1.3!important;
+  padding:10px 8px!important;
 }
-.bss-v12-enhanced .bss-v12-calculator-grid.bss-v12-no-image{
-  grid-template-columns:minmax(0,1fr)!important;max-width:600px!important;margin-inline:auto!important;
+/* Calculator: fixed-to-viewport upper limit, with a real two-column grid.
+   Percent columns from the old CSS plus a gap exceeded 100% width. */
+.bss__layer.bss-v12-enhanced[data-bss-mode="modal"][data-bss-v12-view="calculator"] .bss__panel {
+  height:min(535px,calc(100dvh - 24px))!important;
+  max-height:calc(100dvh - 24px)!important;
 }
-/* The model always stays inside a bounded panel. No cover, crop, stretch,
-   negative positioning, transform or page bleed — on any viewport. */
-.bss-v12-enhanced .bss-v12-image{
-  box-sizing:border-box!important;
-  width:100%!important;max-width:100%!important;
-  height:min(59dvh,535px)!important;
-  min-height:350px!important;max-height:535px!important;
-  aspect-ratio:auto!important;
-  margin:0!important;padding:0!important;
-  overflow:hidden!important;
+.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss__content {
+  flex:1 1 auto!important;min-height:0!important;
+}
+.bss-v12-enhanced .bss-v12-calculator {
+  display:block!important;min-width:0!important;
+  flex:1 1 auto!important;min-height:0!important;
+  margin:0!important;padding:0!important;border:0!important;
+}
+.bss-v12-enhanced .bss-v12-calculator-grid {
+  display:grid!important;
+  grid-template-columns:minmax(0,0.82fr) minmax(0,1fr)!important;
+  gap:clamp(16px,3vw,36px)!important;
+  align-items:stretch!important;
+  width:100%!important;height:100%!important;
+  min-height:0!important;min-width:0!important;
+  max-width:100%!important;
+}
+.bss-v12-enhanced .bss-v12-calculator-grid.bss-v12-no-image {
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  max-width:560px!important;margin-inline:auto!important;
+}
+.bss-v12-enhanced .bss-v12-image {
   display:flex!important;align-items:center!important;justify-content:center!important;
-  background:#f7f7f6!important;
-  position:relative!important;
+  align-self:stretch!important;box-sizing:border-box!important;
+  width:100%!important;height:100%!important;
+  min-height:0!important;max-height:100%!important;max-width:100%!important;
+  margin:0!important;padding:0!important;
+  background:#f7f7f6!important;overflow:hidden!important;
+  aspect-ratio:auto!important;position:relative!important;
 }
+.bss-v12-enhanced .bss-v12-image[hidden]{display:none!important}
 .bss-v12-enhanced .bss-v12-image img,
 .bss-v12-enhanced .bss-v12-image img[src],
-.bss-v12-enhanced .bss-v12-image picture,
 .bss-v12-enhanced .bss-v12-image picture img{
-  box-sizing:border-box!important;
-  display:block!important;width:100%!important;height:100%!important;
+  display:block!important;position:static!important;
+  width:100%!important;height:100%!important;
   min-width:0!important;min-height:0!important;
   max-width:100%!important;max-height:100%!important;
   object-fit:contain!important;object-position:center center!important;
-  transform:none!important;scale:1!important;margin:0 auto!important;
-  position:static!important;clip-path:none!important;
+  transform:none!important;scale:1!important;clip-path:none!important;
 }
 .bss-v12-enhanced .bss-v12-form{
-  box-sizing:border-box!important;display:flex!important;flex-direction:column!important;
-  min-width:0!important;min-height:0!important;
-  padding:9px 0 5px!important;margin:0!important;gap:0!important;
-  color:#033c4f!important;
+  display:flex!important;flex-direction:column!important;
+  min-width:0!important;min-height:0!important;height:100%!important;
+  box-sizing:border-box!important;gap:0!important;
+  margin:0!important;padding:8px 0 4px!important;
 }
-.bss-v12-enhanced .bss-v12-calculator-head{text-align:center!important;margin:0 0 9px!important}
+.bss-v12-enhanced .bss-v12-calculator-head{
+  margin:0 0 7px!important;text-align:center!important;
+}
 .bss-v12-enhanced .bss-v12-calculator-head h3{
-  font-size:clamp(20px,1.75vw,25px)!important;
-  font-weight:680!important;line-height:1.22!important;
-  margin:0!important;color:#17363f!important;letter-spacing:-.015em!important;
+  font-size:clamp(18px,1.75vw,23px)!important;
+  font-weight:650!important;line-height:1.2!important;
+  letter-spacing:-.015em!important;color:#173b47!important;margin:0!important;
 }
-/* Center the selected units; IN precedes CM, and give a little padding below. */
 .bss-v12-enhanced[data-bss-v12-view="calculator"] .bss-v12-unit-choice{
   display:flex!important;justify-content:center!important;align-items:center!important;
-  width:100%!important;margin:5px auto 20px!important;gap:6px!important;
-  padding:0 0 11px!important;min-height:34px!important;
+  width:100%!important;min-height:31px!important;gap:6px!important;
+  padding:0 0 7px!important;margin:0 auto 11px!important;
 }
 .bss-v12-enhanced .bss-v12-unit-choice button{
   border:0!important;border-bottom:2px solid transparent!important;border-radius:0!important;
-  min-height:31px!important;padding:5px 8px!important;
-  font-size:12px!important;font-weight:600!important;background:transparent!important;
-  color:#8b9396!important;
+  min-width:38px!important;min-height:29px!important;
+  padding:4px 5px!important;
+  background:transparent!important;color:#829397!important;
+  font:inherit!important;font-size:12px!important;font-weight:600!important;
 }
-.bss-v12-enhanced .bss-v12-unit-choice button.is-selected{
-  color:#033c4f!important;border-bottom-color:#033c4f!important;
-}
-/* The bar scales belong to the Size Chart view, not the measurement form. */
-.bss-v12-enhanced[data-bss-v12-view="calculator"] .bss-v12-insights{display:none!important}
-/* Thin, airy measurement rows to mirror the supplied reference. */
-.bss-v12-enhanced .bss-v12-inputs{display:grid!important;gap:16px!important;margin:5px 0 0!important}
+.bss-v12-enhanced .bss-v12-unit-choice button.is-selected{color:#033c4f!important;border-bottom-color:#033c4f!important}
+.bss-v12-enhanced .bss-v12-inputs{display:grid!important;gap:10px!important;margin:0!important}
 .bss-v12-enhanced .bss-v12-field{
-  box-sizing:border-box!important;
-  display:grid!important;grid-template-columns:minmax(74px,96px) minmax(0,1fr) 24px!important;
-  align-items:center!important;gap:15px!important;
-  padding:5px 0!important;min-width:0!important;
-  font-size:10px!important;font-weight:570!important;letter-spacing:.045em!important;
-  color:#6a787f!important;line-height:1.25!important;text-transform:uppercase!important;
+  display:grid!important;grid-template-columns:80px minmax(0,1fr) 24px!important;
+  gap:12px!important;align-items:center!important;
+  font-size:10px!important;line-height:1.3!important;
+  font-weight:550!important;letter-spacing:.035em!important;
+  text-transform:uppercase!important;color:#667f87!important;
+  padding:0!important;margin:0!important;min-width:0!important;
 }
 .bss-v12-enhanced .bss-v12-field input{
-  box-sizing:border-box!important;width:100%!important;min-width:0!important;
-  height:51px!important;padding:9px 2px!important;
-  border:0!important;border-bottom:1px solid #d7dfe1!important;
-  border-radius:0!important;background:#fff!important;
-  box-shadow:none!important;
-  color:#173b47!important;font:inherit!important;
-  font-size:20px!important;font-weight:450!important;
-  letter-spacing:0!important;text-transform:none!important;
+  box-sizing:border-box!important;min-width:0!important;width:100%!important;
+  height:46px!important;border:0!important;border-bottom:1px solid #d7e0e2!important;
+  border-radius:0!important;box-shadow:none!important;
+  padding:8px 2px!important;background:transparent!important;
+  font:inherit!important;font-size:18px!important;font-weight:450!important;
+  color:#173b47!important;text-transform:none!important;
 }
-.bss-v12-enhanced .bss-v12-field input::placeholder{
-  font-size:15px!important;color:#9aa5a8!important;opacity:1!important;font-weight:400!important;
+.bss-v12-enhanced .bss-v12-field input::placeholder{font-size:13px!important;font-weight:400!important;color:#9aa7aa!important;opacity:1!important}
+.bss-v12-enhanced .bss-v12-unit{font-size:10px!important;color:#8da0a5!important}
+.bss-v12-enhanced .bss-v12-result,
+.bss-v12-enhanced .bss-v12-result:empty{
+  order:2!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  min-height:34px!important;max-height:56px!important;
+  flex:0 0 auto!important;padding:0!important;
+  margin:3px 0 0!important;
+  border:0!important;border-radius:0!important;background:transparent!important;
+  box-shadow:none!important;text-align:center!important;
 }
-.bss-v12-enhanced .bss-v12-unit{font-size:11px!important;color:#a1abad!important;letter-spacing:0!important}
-/* Secondary actions and primary CTA are deliberately separate and right aligned. */
+.bss-v12-enhanced .bss-v12-result:not(:empty){display:flex!important}
+.bss-v12-enhanced .bss-v12-best-match {margin:0!important;text-align:center!important;line-height:1.3!important}
+.bss-v12-enhanced .bss-v12-best-match-label{font-size:14px!important;font-weight:500!important;color:#26434c!important}
+.bss-v12-enhanced .bss-v12-best-match-value{font-size:21px!important;font-weight:700!important;color:#033c4f!important}
 .bss-v12-enhanced .bss-v12-actions{
-  display:flex!important;flex-direction:column!important;gap:10px!important;
-  margin-top:auto!important;padding:24px 0 0!important;
-  align-items:stretch!important;justify-content:flex-end!important;
+  order:3!important;display:flex!important;flex-direction:column!important;
+  flex:0 0 auto!important;justify-content:center!important;align-items:stretch!important;
+  margin-top:auto!important;padding:4px 0 0!important;gap:0!important;
 }
-.bss-v12-enhanced .bss-v12-helpers{
-  display:flex!important;flex-wrap:wrap!important;
-  justify-content:center!important;align-items:center!important;gap:10px!important;
-}
-.bss-v12-enhanced .bss-v12-helper{
-  appearance:none!important;min-height:33px!important;
-  border:0!important;border-radius:999px!important;
-  background:#f4f4f3!important;color:#66777c!important;
-  padding:8px 15px!important;font:inherit!important;
-  font-size:11px!important;font-weight:570!important;
-  cursor:pointer!important;line-height:1.3!important;
-}
-.bss-v12-enhanced .bss-v12-helper:hover{background:#e8eeee!important;color:#033c4f!important}
-.bss-v12-enhanced .bss-v12-measure-help{
-  padding:12px 14px!important;margin:2px 0!important;
-  background:#f6f8f8!important;border:1px solid #e4e9e9!important;
-  color:#35515a!important;border-radius:8px!important;
-  font-size:11px!important;line-height:1.55!important;
-}
-.bss-v12-enhanced .bss-v12-measure-help[hidden]{display:none!important}
-.bss-v12-enhanced .bss-v12-measure-help p{margin:3px 0!important}
-.bss-v12-enhanced .bss-v12-primary-row{display:flex!important;justify-content:flex-end!important;align-items:center!important}
+.bss-v12-enhanced .bss-v12-primary-row{display:flex!important;justify-content:center!important;align-items:center!important}
 .bss-v12-enhanced .bss-v12-submit{
-  background:#033c4f!important;color:#fff!important;
-  border:1px solid #033c4f!important;border-radius:3px!important;
-  min-height:47px!important;padding:12px 22px!important;
-  font-size:13px!important;font-weight:620!important;line-height:1.2!important;
-  cursor:pointer!important;box-shadow:none!important;
+  min-height:43px!important;min-width:165px!important;
+  padding:10px 16px!important;border:1px solid #033c4f!important;
+  background:#033c4f!important;color:white!important;border-radius:3px!important;
+  font:inherit!important;font-size:12px!important;font-weight:620!important;
+  cursor:pointer!important;
 }
 .bss-v12-enhanced .bss-v12-submit:hover{background:#14576a!important}
-.bss-v12-enhanced .bss-v12-submit:focus-visible,
-.bss-v12-enhanced .bss-v12-helper:focus-visible{outline:2px solid #033c4f!important;outline-offset:3px!important}
-/* One result line ONLY, placed quietly within the right panel. */
-.bss-v12-enhanced .bss-v12-result:empty{display:none!important}
-.bss-v12-enhanced .bss-v12-result:not(:empty){
-  display:block!important;border:0!important;border-radius:0!important;
-  padding:8px 0 0!important;margin:11px 0 0!important;
-  background:none!important;box-shadow:none!important;text-align:center!important;
-}
-.bss-v12-enhanced .bss-v12-best-match{text-align:center!important;margin:0!important;line-height:1.4!important}
-.bss-v12-enhanced .bss-v12-best-match-label{font-size:15px!important;color:#27444d!important;font-weight:500!important}
-.bss-v12-enhanced .bss-v12-best-match-value{font-size:24px!important;color:#033c4f!important;font-weight:740!important}
-@media(max-width:760px){
+.bss-v12-enhanced .bss-v12-helpers,.bss-v12-enhanced .bss-v12-measure-help{display:none!important}
+.bss-v12-enhanced .bss-v12-caution{order:4!important;font-size:11px!important;line-height:1.4!important;margin:5px 0 0!important}
+.bss-v12-quick-trigger:focus-visible{outline:2px solid #033c4f;outline-offset:3px}
+[data-bss-v12-owns-quickview="true"] .bss-v9-trigger{display:none!important}
+/* 650px and below: short contained guide above a compact, non-scrolling form. */
+@media(max-width:650px){
   .bss__layer.bss-v12-enhanced[data-bss-mode="modal"]{padding:7px!important}
   .bss__layer.bss-v12-enhanced[data-bss-mode="modal"] .bss__panel{
     width:calc(100vw - 14px)!important;max-width:calc(100vw - 14px)!important;
     max-height:calc(100dvh - 14px)!important;border-radius:9px!important;
   }
-  .bss-v12-enhanced .bss__head{min-height:55px!important;padding:14px 46px 8px!important}
-  .bss-v12-enhanced .bss__heading{font-size:16px!important}
-  .bss-v12-enhanced .bss__content{padding:0 17px 19px!important}
+  .bss-v12-enhanced .bss__head{min-height:43px!important;padding:10px 42px 5px!important}
+  .bss-v12-enhanced .bss__heading{font-size:15px!important}
+  .bss-v12-enhanced .bss__close{top:5px!important;right:6px!important}
+  .bss-v12-enhanced .bss__content{padding:0 14px 13px!important}
+  .bss-v12-enhanced .bss-v12-chart-navigation{margin-bottom:8px!important}
   .bss-v12-enhanced .bss-v12-tabs{width:100%!important}
-  .bss-v12-enhanced .bss-v12-tab{min-height:39px!important;font-size:12px!important;padding:8px!important}
+  .bss-v12-enhanced .bss-v12-tab{min-height:34px!important;padding:6px!important;font-size:11px!important}
+  .bss__layer.bss-v12-enhanced[data-bss-mode="modal"][data-bss-v12-view="calculator"] .bss__panel{
+    height:min(610px,calc(100dvh - 14px))!important;
+  }
   .bss-v12-enhanced .bss-v12-calculator-grid{
-    grid-template-columns:minmax(0,1fr)!important;gap:14px!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-rows:minmax(0,160px) minmax(0,1fr)!important;
+    gap:9px!important;
+  }
+  .bss-v12-enhanced .bss-v12-calculator-grid.bss-v12-no-image{
+    grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;
   }
   .bss-v12-enhanced .bss-v12-image{
-    width:100%!important;height:min(26dvh,190px)!important;
-    max-height:190px!important;min-height:110px!important;
+    width:100%!important;height:100%!important;
+    min-height:0!important;max-height:160px!important;
   }
-  .bss-v12-enhanced .bss-v12-form{padding:1px 0 3px!important}
-  .bss-v12-enhanced .bss-v12-calculator-head{margin:1px 0 4px!important}
-  .bss-v12-enhanced .bss-v12-calculator-head h3{font-size:20px!important}
-  .bss-v12-enhanced .bss-v12-unit-choice{margin:2px auto 11px!important;padding-bottom:8px!important}
+  .bss-v12-enhanced .bss-v12-form{padding:0!important}
+  .bss-v12-enhanced .bss-v12-calculator-head{margin-bottom:3px!important}
+  .bss-v12-enhanced .bss-v12-calculator-head h3{font-size:18px!important}
+  .bss-v12-enhanced .bss-v12-unit-choice{margin-bottom:6px!important;padding-bottom:3px!important}
   .bss-v12-enhanced .bss-v12-inputs{gap:2px!important}
-  .bss-v12-enhanced .bss-v12-field{grid-template-columns:76px 1fr 23px!important;gap:8px!important}
-  .bss-v12-enhanced .bss-v12-field input{height:43px!important;font-size:17px!important}
-  .bss-v12-enhanced .bss-v12-field input::placeholder{font-size:13px!important}
-  .bss-v12-enhanced .bss-v12-actions{padding-top:13px!important}
-  .bss-v12-enhanced .bss-v12-submit{min-height:43px!important;font-size:12px!important}
-  .bss-v12-enhanced .bss-v12-best-match-label{font-size:14px!important}
-  .bss-v12-enhanced .bss-v12-best-match-value{font-size:21px!important}
+  .bss-v12-enhanced .bss-v12-field{grid-template-columns:66px minmax(0,1fr) 20px!important;gap:6px!important}
+  .bss-v12-enhanced .bss-v12-field input{height:37px!important;font-size:16px!important}
+  .bss-v12-enhanced .bss-v12-field input::placeholder{font-size:12px!important}
+  .bss-v12-enhanced .bss-v12-result{min-height:28px!important;margin:0!important}
+  .bss-v12-enhanced .bss-v12-actions{padding:0!important}
+  .bss-v12-enhanced .bss-v12-submit{min-height:38px!important}
+  .bss-v12-enhanced[data-bss-v12-view="chart"] .bss__units-row{margin:0 0 6px!important}
+  .bss-v12-enhanced[data-bss-v12-view="chart"] .bss__fit-scale,
+  .bss-v12-enhanced[data-bss-v12-view="chart"] .bss-v12-support{margin:6px auto 10px!important}
+  .bss-v12-enhanced[data-bss-v12-view="chart"] .bss__table th,
+  .bss-v12-enhanced[data-bss-v12-view="chart"] .bss__table td{padding:7px 5px!important;font-size:11px!important}
 }
-@media (prefers-reduced-motion:reduce){
-  .bss-v12-enhanced .bss-v12-tab{transition:none!important}
-}
-
-
-/* ===== BirdEye Size Studio V12.1.1: final visual and stable sizing refinements ===== */
-/* White segmented surface; original BirdEye teal remains the active fill. */
-.bss-v12-enhanced .bss-v12-tabs {
-  background:#fff!important;
-  border:1px solid #e3e9eb!important;
-  box-shadow:none!important;
-}
-.bss-v12-enhanced .bss-v12-tab {
-  color:#173944!important;
-  background:#fff!important;
-  border-radius:999px!important;
-}
-.bss-v12-enhanced .bss-v12-tab.is-active {
-  color:#fff!important;
-  background:#033c4f!important;
-}
-.bss-v12-enhanced .bss-v12-tab:focus-visible {
-  outline:2px solid #033c4f!important;
-  outline-offset:2px!important;
-}
-/* Both modal states occupy one unchanging outer frame. Only content scrolls. */
-.bss__layer.bss-v12-enhanced[data-bss-mode="modal"] .bss__panel {
-  height:min(700px,calc(100dvh - 36px))!important;
-  min-height:0!important;
-  max-height:calc(100dvh - 36px)!important;
-  display:flex!important;
-  flex-direction:column!important;
-  overflow:hidden!important;
-}
-.bss-v12-enhanced .bss__head { flex:0 0 auto!important; }
-.bss-v12-enhanced .bss__content {
-  flex:1 1 auto!important;
-  min-height:0!important;
-  overflow:auto!important;
-  scrollbar-gutter:stable!important;
-}
-.bss-v12-enhanced .bss-v12-chart-navigation { flex:0 0 auto!important; }
-.bss-v12-enhanced .bss-v12-calculator-grid { min-height:0!important; }
-.bss-v12-enhanced .bss-v12-image { height:min(52dvh,470px)!important;min-height:290px!important;max-height:470px!important; }
-.bss-v12-enhanced .bss-v12-image img,
-.bss-v12-enhanced .bss-v12-image img[src] {
-  object-fit:contain!important;
-  object-position:center center!important;
-  width:100%!important;height:100%!important;
-  max-height:100%!important;max-width:100%!important;
-  transform:none!important;scale:1!important;
-  position:static!important;
-}
-/* Result is between input rows and the one, centered primary CTA. */
-.bss-v12-enhanced .bss-v12-form { display:flex!important; flex-direction:column!important; }
-.bss-v12-enhanced .bss-v12-result {
-  order:2!important;
-  flex:0 0 auto!important;
-  min-height:50px!important;
-  display:flex!important;align-items:center!important;justify-content:center!important;
-  margin:6px 0 0!important;padding:0!important;
-  border:0!important;background:transparent!important;box-shadow:none!important;
-}
-.bss-v12-enhanced .bss-v12-result:empty {
-  display:flex!important;
-}
-.bss-v12-enhanced .bss-v12-result:not(:empty) {
-  display:flex!important;align-items:center!important;justify-content:center!important;
-  padding:0!important;margin:6px 0 0!important;
-}
-.bss-v12-enhanced .bss-v12-actions {
-  order:3!important;
-  margin-top:auto!important;
-  padding:9px 0 0!important;
-  gap:0!important;
-}
-.bss-v12-enhanced .bss-v12-primary-row {
-  justify-content:center!important;
-  align-items:center!important;
-}
-.bss-v12-enhanced .bss-v12-submit { min-width:170px!important; }
-.bss-v12-enhanced .bss-v12-caution { order:4!important; }
-/* Remove any stale helper presentations left behind by older CSS. */
-.bss-v12-enhanced .bss-v12-helpers,
-.bss-v12-enhanced .bss-v12-measure-help { display:none!important; }
-@media(max-width:760px){
-  .bss__layer.bss-v12-enhanced[data-bss-mode="modal"] .bss__panel {
-    height:calc(100dvh - 14px)!important;
-    max-height:calc(100dvh - 14px)!important;
+/* Short landscape screens: minimize vertical footprint rather than scroll. */
+@media(max-height:650px) and (min-width:651px){
+  .bss-v12-enhanced .bss__head{min-height:42px!important;padding:7px 48px 4px!important}
+  .bss-v12-enhanced .bss-v12-chart-navigation{margin-bottom:5px!important}
+  .bss-v12-enhanced .bss-v12-tab{min-height:33px!important}
+  .bss__layer.bss-v12-enhanced[data-bss-mode="modal"][data-bss-v12-view="calculator"] .bss__panel{
+    height:calc(100dvh - 22px)!important;
   }
-  .bss-v12-enhanced .bss__content{scrollbar-gutter:auto!important;}
-  .bss-v12-enhanced .bss-v12-image {height:min(24dvh,190px)!important;min-height:105px!important;max-height:190px!important;}
-  .bss-v12-enhanced .bss-v12-form {padding-bottom:10px!important;}
-  .bss-v12-enhanced .bss-v12-result{min-height:38px!important;margin-top:5px!important;}
-  .bss-v12-enhanced .bss-v12-actions {padding-top:4px!important;}
-  .bss-v12-enhanced .bss-v12-submit{min-width:160px!important;}
+  .bss-v12-enhanced .bss-v12-calculator-head{margin-bottom:2px!important}
+  .bss-v12-enhanced .bss-v12-field input{height:35px!important}
+  .bss-v12-enhanced .bss-v12-inputs{gap:2px!important}
 }
+@media(max-height:650px) and (max-width:650px){
+  .bss__layer.bss-v12-enhanced[data-bss-mode="modal"][data-bss-v12-view="calculator"] .bss__panel{height:calc(100dvh - 12px)!important}
+  .bss-v12-enhanced .bss-v12-calculator-grid{grid-template-rows:minmax(0,90px) minmax(0,1fr)!important;gap:5px!important}
+  .bss-v12-enhanced .bss-v12-image{max-height:90px!important}
+  .bss-v12-enhanced .bss-v12-calculator-head h3{font-size:16px!important}
+  .bss-v12-enhanced .bss-v12-unit-choice{min-height:25px!important;padding:0!important}
+  .bss-v12-enhanced .bss-v12-field input{height:32px!important}
+  .bss-v12-enhanced .bss-v12-result{min-height:22px!important}
+  .bss-v12-enhanced .bss-v12-submit{min-height:35px!important}
+}
+@media(prefers-reduced-motion:reduce){.bss-v12-enhanced *{scroll-behavior:auto!important}}
 
-/* V12.1.2: slight scale reduction; same fixed frame in either view. */
-.bss__layer.bss-v12-enhanced[data-bss-mode="modal"] {
-  position:fixed!important; inset:0!important; z-index:2147483647!important;
-  isolation:isolate!important; pointer-events:auto!important;
+/* V12.1.3 closure invariant: a hidden legacy layer MUST remain hidden even
+   when its enhanced modal styles force display:flex. */
+.bss__layer.bss-v12-enhanced[hidden],
+.bss__layer.bss-v12-enhanced[hidden][data-bss-mode="modal"],
+.bss__layer.bss-v12-enhanced[hidden][data-bss-mode="drawer"] {
+  display:none!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
 }
-.bss__layer.bss-v12-enhanced[data-bss-mode="modal"] .bss__panel {
-  width:min(1010px,calc(100vw - 48px))!important;
-  max-width:1010px!important;
-  height:min(630px,calc(100dvh - 46px))!important;
-  max-height:calc(100dvh - 46px)!important;
-}
-.bss-v12-enhanced .bss-v12-image {
-  height:min(48dvh,405px)!important; max-height:405px!important; min-height:240px!important;
-}
-.bss-v12-enhanced .bss-v12-image img {object-fit:contain!important;object-position:center center!important;}
-.bss__layer.bss-v12-enhanced .bss__scrim {touch-action:none!important;}
-.bss__layer.bss-v12-enhanced .bss__panel {
-  overscroll-behavior:contain!important; pointer-events:auto!important;
-}
-.bss__layer.bss-v12-enhanced .bss__content {overscroll-behavior:contain!important;}
-@media(max-width:760px){
-  .bss__layer.bss-v12-enhanced[data-bss-mode="modal"] .bss__panel {
-    width:calc(100vw - 24px)!important; max-width:calc(100vw - 24px)!important;
-    height:calc(100dvh - 26px)!important; max-height:calc(100dvh - 26px)!important;
-  }
-  .bss-v12-enhanced .bss-v12-image {
-    height:min(22dvh,170px)!important; min-height:95px!important; max-height:170px!important;
-  }
-}
+/* Scrim never sits above the dialog or receives clicks intended for close. */
+.bss__layer.bss-v12-enhanced .bss__scrim{z-index:0!important}
+.bss__layer.bss-v12-enhanced .bss__panel{position:relative!important;z-index:1!important}
+.bss__layer.bss-v12-enhanced .bss__close{pointer-events:auto!important;cursor:pointer!important}

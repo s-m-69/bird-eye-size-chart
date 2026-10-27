@@ -1,9 +1,9 @@
-/* BirdEye Size Studio V12.1.2 – guarded close and background scroll lock. */
+/* BirdEye Size Studio V12.1.3 – chart height, real close and hard background scroll lock. */
 (function (global) {
   'use strict';
   if (global.__BSS_V12_LOADED__) return;
   global.__BSS_V12_LOADED__ = true;
-  global.__BSS_V12_BUILD__ = '12.1.2';
+  global.__BSS_V12_BUILD__ = '12.1.3';
   const toInches = (n, unit) => unit === 'cm' ? n / 2.54 : n;
   const display = (s) => String(s ?? '').trim();
   const labels = ['Runs small','Runs slightly small','True to size','Runs slightly large','Runs large'];
@@ -182,12 +182,28 @@
     // Restore the scroll offset after releasing fixed positioning.
     if (Math.abs((global.scrollY || 0) - initial.y) > 1) global.scrollTo(0, initial.y);
   }
-  function syncBackgroundScroll() {
-    const open = Array.from(doc.querySelectorAll('[data-bss-layer].bss-v12-enhanced'))
+  function anyVisibleSizeGuide() {
+    return Array.from(doc.querySelectorAll('[data-bss-layer].bss-v12-enhanced'))
       .some(layer => layer.isConnected && !layer.hidden);
-    if (open) lockBackground();
+  }
+  function syncBackgroundScroll() {
+    if (anyVisibleSizeGuide()) lockBackground();
     else unlockBackground();
   }
+  // Avoid theme-level, nested scrollbar, wheel and mobile touch leakage.
+  // The Size Studio modal intentionally fits within one viewport; no internal
+  // scrolling is needed for ordinary supported product charts.
+  function preventBackgroundMotion(event) {
+    if (anyVisibleSizeGuide() && event.cancelable) event.preventDefault();
+  }
+  global.addEventListener('wheel', preventBackgroundMotion, { capture: true, passive: false });
+  global.addEventListener('touchmove', preventBackgroundMotion, { capture: true, passive: false });
+  doc.addEventListener('keydown', event => {
+    if (!anyVisibleSizeGuide()) return;
+    if (!['PageDown','PageUp','Home','End','ArrowDown','ArrowUp',' '].includes(event.key)) return;
+    if (event.target?.closest?.('input,textarea,select,[contenteditable="true"]')) return;
+    if (event.cancelable) event.preventDefault();
+  }, true);
   // The legacy PDP handler owns the close operation. Run our guard after its
   // listener on the same layer, and suppress click bubbling to theme handlers.
   function guardClose(layer) {
