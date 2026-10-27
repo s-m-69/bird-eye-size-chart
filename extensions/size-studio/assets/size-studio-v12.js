@@ -224,12 +224,13 @@
     const rating=chart.supportLevel,kind=barKind(chart);
     const section=create('section','bss-v12-support');
     section.append(create('h3','bss-v12-subtitle',kind));
-    const track=create('div','bss-v12-support-track');track.setAttribute('role','img');
+    // V13: use the exact Fit five-segment appearance, without the old dot.
+    const track=create('div','bss__fit-track');track.setAttribute('role','img');
     track.setAttribute('aria-label',`${kind}: ${rating} of 5`);
-    for(let i=1;i<=5;i++)track.append(create('span',i===rating?'is-selected':''));
+    for(let i=1;i<=5;i++)track.append(create('span',i===rating?'bss__fit-segment is-active':'bss__fit-segment'));
     section.append(track);
-    const captions=create('div','bss-v12-track-labels');
-    for(const text of [`LOW ${kind.toUpperCase()}`,`MID ${kind.toUpperCase()}`,`HIGH ${kind.toUpperCase()}`])captions.append(create('span','',text));
+    const captions=create('div','bss__fit-labels');
+    for(const text of [`Low ${kind.toLowerCase()}`,`Mid ${kind.toLowerCase()}`,`High ${kind.toLowerCase()}`])captions.append(create('span','',text));
     section.append(captions);return section;
   }
   function fitBar(chart) {
@@ -252,12 +253,12 @@
     const wrapper=create('section','bss-v12-compact-support');
     const title=create('div','bss-v12-info-title');
     title.append(create('span','',kind),create('span','bss-v12-info-value',`${rating} / 5`));wrapper.append(title);
-    const track=create('div','bss-v12-support-track');track.setAttribute('role','img');
+    const track=create('div','bss__fit-track');track.setAttribute('role','img');
     track.setAttribute('aria-label',`${kind}: ${rating} of 5`);
-    for(let i=1;i<=5;i++)track.append(create('span',i===rating?'is-selected':''));
+    for(let i=1;i<=5;i++)track.append(create('span',i===rating?'bss__fit-segment is-active':'bss__fit-segment'));
     wrapper.append(track);
-    const captions=create('div','bss-v12-track-labels');
-    for(const text of [`LOW ${kind.toUpperCase()}`,`MID ${kind.toUpperCase()}`,`HIGH ${kind.toUpperCase()}`])captions.append(create('span','',text));
+    const captions=create('div','bss__fit-labels');
+    for(const text of [`Low ${kind.toLowerCase()}`,`Mid ${kind.toLowerCase()}`,`High ${kind.toLowerCase()}`])captions.append(create('span','',text));
     wrapper.append(captions);return wrapper;
   }
   function renderCalculator(chart,root,unit,onChart) {
