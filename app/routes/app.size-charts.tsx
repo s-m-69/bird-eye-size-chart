@@ -20,6 +20,10 @@ import { updateFitBatch } from '../models/sizeStudioFitCsv.server';
 import { planSupportCsv, supportCsvTemplate, SUPPORT_BATCH_SIZE } from '../models/sizeStudioSupportCsv';
 import type { SupportUpdate, SupportResult } from '../models/sizeStudioSupportCsv';
 import { updateSupportBatch } from '../models/sizeStudioSupportCsv.server';
+// BSS_ADMIN_V12_1_4_GUIDANCE: chart image and eligibility bulk updates.
+import { updateGuidanceBatch } from '../models/sizeStudioGuidanceCsv.server';
+import { GuidanceCsvUpdater } from '../components/size-studio/GuidanceCsvUpdater';
+import { AdminOverview } from '../components/size-studio/AdminOverview';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
@@ -78,6 +82,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return { importResults };
     }
     // BSS_V12_0_7_SUPPORT_COMPRESSION — validated server-side before chart update.
+    if (intent === 'update-guidance-batch') {
+      const raw = String(form.get('payload') || '');
+      if (raw.length > 12000) throw new Error('Image and eligibility update payload is too large.');
+      return { guidanceResults: await updateGuidanceBatch(admin, JSON.parse(raw), form.get('approveBody') === 'yes') };
+    }
     if (intent === 'update-support-batch') {
       const raw=String(form.get('payload') || '');
       if (raw.length>10000) throw new Error('Bar update payload too large.');
@@ -367,6 +376,7 @@ export default function SizeChartsPage() {
         <Form method="post"><input type="hidden" name="intent" value="setup"/><button className="bs-v11-btn primary" type="submit">Set up library</button></Form></div>
       : screen === 'import' ? <>
         <FitCsvUpdater charts={charts} truncated={truncated} />
+        <GuidanceCsvUpdater charts={charts} truncated={truncated} />
         <SupportCsvUpdater charts={charts} truncated={truncated} />
         <div className="bs-v11-import-layout">
           <section className="bs-v11-csv-steps">
@@ -400,6 +410,7 @@ export default function SizeChartsPage() {
             <button className="bs-v11-btn primary" type="button" disabled={csvParsing || csvRunning || csvInFlight || csvFinished} onClick={startImport}>{csvRunning || csvInFlight ? 'Saving charts…' : csvFinished ? 'Import complete ✓' : csvFailed ? 'Retry remaining charts' : csvResults.length ? 'Continue import' : `Import ${csvPlan.charts.length} chart${csvPlan.charts.length === 1 ? '' : 's'}`}</button></div>
         </section>}
       </> : screen === 'library' ? <>
+        <AdminOverview charts={charts} />
         <div className="bs-v11-summary"><div><span className="bs-v11-big">{charts.length}</span><span className="bs-v11-muted">Saved charts</span></div><span className="bs-v11-small">Measurements in inches</span></div>
         <div className="bs-v11-library">
           <div className="bs-v11-search-row"><label htmlFor="bs-v11-search">Find a size chart</label><input id="bs-v11-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search charts..." /><button type="button" className="bs-v11-btn subtle" disabled={usageFetcher.state !== 'idle'} onClick={() => usageFetcher.load('/app/chart-usage')} aria-label="Refresh product assignment counts">↻ Refresh counts</button></div>
@@ -606,7 +617,7 @@ export default function SizeChartsPage() {
         </Form>
       </section>
     </div>}
-    <style>{adminStyles + libraryEnhancementStyles + fitScaleEditorStyles + v12SettingsStyles + v12BarNumericStyles}</style>
+    <style>{adminStyles + libraryEnhancementStyles + fitScaleEditorStyles + v12SettingsStyles + v12BarNumericStyles + bssAdminUiPolishStyles}</style>
   </s-page>;
 }
 
@@ -891,4 +902,58 @@ const v12BarNumericStyles = String.raw`
 .bs-v12-settings input[type="number"]{display:block;width:125px;height:42px;margin-top:7px;padding:9px 12px;border:1px solid #b9cdd1;border-radius:0;background:#fff;color:#033C4F;font:inherit;font-size:16px;font-variant-numeric:tabular-nums}
 .bs-v12-settings input[type="number"]:focus-visible{outline:2px solid #033C4F;outline-offset:2px}
 .bs-v12-bar-hint{display:block;margin-top:8px;font-size:11px;line-height:1.5;color:#526974}
+`;
+
+// BSS_ADMIN_V12_1_4_GUIDANCE — additive, scoped Shopify Admin styling.
+const bssAdminUiPolishStyles = String.raw`
+/* BirdEye Size Studio Admin V12.1.4. Scoped; no storefront CSS changes. */
+.bs-v11-root{--bss-admin-border:#dce5e6;--bss-admin-ink:#103d4c;--bss-admin-muted:#62757b;--bss-admin-bg:#f7f9f9;color:var(--bss-admin-ink);font-family:inherit}
+.bs-v11-root h1,.bs-v11-root h2,.bs-v11-root h3{letter-spacing:-.018em}
+.bs-v11-root .bs-v11-top{gap:24px;align-items:center;margin-bottom:25px}
+.bs-v11-root .bs-v11-top h1{font-weight:720;letter-spacing:-.03em}
+.bs-v11-root .bs-v11-btn{min-height:40px;transition:background-color .14s ease,border-color .14s ease,box-shadow .14s ease}
+.bs-v11-root .bs-v11-btn:focus-visible,.bs-v11-root input:focus-visible,.bs-v11-root select:focus-visible{outline:2px solid #1b7082;outline-offset:2px}
+.bs-v11-root .bs-v11-chart-row{border-bottom:1px solid #e5eaeb;gap:15px}
+.bs-v11-root .bs-v11-chart-row:hover{background:#f8faf9}
+.bs-v11-root .bs-v11-table th{background:#f4f7f7;color:#39575f}
+.bs-v11-root .bs-v11-table td{color:#274651}
+.bss-admin-eyebrow,.bss-admin-step{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:750;color:#61757c}
+.bss-admin-overview{margin:3px 0 22px}
+.bss-admin-overview-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:13px}
+.bss-admin-overview-head h2{font-size:19px;margin:5px 0 0;font-weight:700}
+.bss-admin-overview-head>span{font-size:12px;color:#698087}
+.bss-admin-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+.bss-admin-kpi{display:flex;flex-direction:column;gap:7px;padding:18px 20px;background:#fff;border:1px solid var(--bss-admin-border);min-width:0}
+.bss-admin-kpi>span{font-size:11px;font-weight:650;color:#56707a;min-height:15px}
+.bss-admin-kpi strong{font-size:29px;letter-spacing:-.04em;line-height:1.1;font-variant-numeric:tabular-nums;font-weight:740}
+.bss-admin-kpi small{font-size:11px;color:#62777f}
+.bss-admin-guidance{background:#fff;border:1px solid var(--bss-admin-border);margin:0 0 22px;padding:24px;color:#173c48}
+.bss-admin-guidance-head{display:flex;justify-content:space-between;gap:18px;align-items:start}
+.bss-admin-guidance-head h2{font-size:20px;font-weight:750;letter-spacing:-.024em;margin:7px 0}
+.bss-admin-guidance-head p{color:#5b7077;font-size:13px;line-height:1.65;max-width:790px;margin:0}
+.bss-admin-meta{white-space:nowrap;border:1px solid #dce5e6;padding:6px 9px;font-size:11px;color:#506b73}
+.bss-admin-guidance-steps{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:21px}
+.bss-admin-guidance-steps>div{border:1px solid #e2e9ea;background:#fbfcfc;padding:20px;min-width:0}
+.bss-admin-guidance-steps h3{font-size:15px;margin:9px 0 5px;font-weight:700}
+.bss-admin-guidance-steps p{font-size:12px;line-height:1.5;color:#597078;margin:0 0 18px}
+.bss-admin-guidance-steps input[type=file]{display:block;margin:10px 0 0;max-width:100%;font-size:12px}
+.bss-admin-selected-file{overflow-wrap:anywhere;margin-top:6px!important}
+.bss-admin-hint{font-size:12px;line-height:1.7;color:#516b73;background:#f3f7f7;border-left:3px solid #033c4f;padding:12px 15px;margin:16px 0 0}
+.bss-admin-hint code{background:#e5eded;padding:2px 4px;font-size:11px}
+.bss-admin-guidance-review{margin-top:22px;border-top:1px solid #e4eded;padding-top:18px}
+.bss-admin-review-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bss-admin-review-head h3{font-size:15px;margin:0 0 10px}.bss-admin-review-head p{font-size:12px;color:#62777f;margin:0 0 10px}
+.bss-admin-review-table-wrap{max-height:330px;overflow:auto;border:1px solid #e1e8e9}
+.bss-admin-review-table{width:100%;border-collapse:collapse;text-align:left;font-size:12px}
+.bss-admin-review-table th{position:sticky;top:0;background:#f4f7f7;color:#47606a;font-weight:750;padding:12px;border-bottom:1px solid #dce5e6}
+.bss-admin-review-table td{padding:12px;border-bottom:1px solid #ecf0f0;vertical-align:top;overflow-wrap:anywhere}
+.bss-admin-approval{display:flex;align-items:flex-start;gap:10px;margin-top:15px;border:1px solid #d6e1e1;padding:14px;background:#fafcfc;font-size:12px;line-height:1.6;cursor:pointer}
+.bss-admin-approval input{margin-top:4px;flex-shrink:0}
+.bss-admin-guidance-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:17px}
+.bss-admin-guidance-actions span,.bss-admin-progress{font-size:12px;color:#5f777d}
+.bss-admin-progress{margin:12px 0;font-variant-numeric:tabular-nums}
+@media(max-width:850px){.bss-admin-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.bss-admin-guidance-steps{grid-template-columns:1fr}}
+@media(max-width:520px){.bss-admin-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.bss-admin-kpi{padding:13px}.bss-admin-kpi strong{font-size:25px}.bss-admin-guidance{padding:15px}.bss-admin-guidance-head,.bss-admin-review-head,.bss-admin-overview-head{display:block}.bss-admin-meta{display:inline-block;margin-top:8px}.bss-admin-overview-head>span{display:block;margin-top:6px}}
+@media(prefers-reduced-motion:reduce){.bs-v11-root .bs-v11-btn{transition:none}}
+
 `;
