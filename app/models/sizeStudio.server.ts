@@ -25,6 +25,8 @@ export type ChartData = {
   supportType?: 'support' | 'compression';
   /** Only verified body ranges can produce a customer size recommendation. */
   recommendationBasis?: "body" | "garment" | "unverified";
+  /** Optional image for measuring this chart's product fit. Stored as a URL in chart_data. */
+  measurementImageUrl?: string;
   unit: "cm" | "in";
   columns: string[];
   rows: string[][];
@@ -149,6 +151,20 @@ export function validateChart(value: any): Omit<Chart, "id" | "handle"> {
   if (basis !== undefined && basis !== null && basis !== '') {
     if (!['body', 'garment', 'unverified'].includes(basis)) throw new Error('Invalid body-measurement verification state.');
     data.recommendationBasis = basis;
+  }
+  // BSS_V12_1_1: chart-specific guidance image; no extra Shopify files scope.
+  const measurementImage = raw.measurementImageUrl;
+  if (measurementImage !== undefined && measurementImage !== null && String(measurementImage).trim() !== '') {
+    if (typeof measurementImage !== 'string' || measurementImage.length > 2048) {
+      throw new Error('Measurement guide image URL must be a valid HTTPS URL (maximum 2048 characters).');
+    }
+    let parsedImageUrl: URL;
+    try { parsedImageUrl = new URL(measurementImage.trim()); }
+    catch { throw new Error('Measurement guide image URL must be a valid HTTPS URL.'); }
+    if (parsedImageUrl.protocol !== 'https:' || !parsedImageUrl.hostname || parsedImageUrl.username || parsedImageUrl.password) {
+      throw new Error('Measurement guide image URL must be HTTPS without embedded credentials.');
+    }
+    data.measurementImageUrl = parsedImageUrl.toString();
   }
   if (JSON.stringify(data).length > 26000) throw new Error("Size chart is too large.");
   return { name, productType, tag, data };

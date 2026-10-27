@@ -1,9 +1,9 @@
-/* BirdEye Size Studio V12.1.0 – minimal best-match result. */
+/* BirdEye Size Studio V12.1.1 – chart-level guide image + stable, reference-led modal. */
 (function (global) {
   'use strict';
   if (global.__BSS_V12_LOADED__) return;
   global.__BSS_V12_LOADED__ = true;
-  global.__BSS_V12_BUILD__ = '12.1.0';
+  global.__BSS_V12_BUILD__ = '12.1.1';
   const toInches = (n, unit) => unit === 'cm' ? n / 2.54 : n;
   const display = (s) => String(s ?? '').trim();
   const labels = ['Runs small','Runs slightly small','True to size','Runs slightly large','Runs large'];
@@ -170,7 +170,7 @@
     section.setAttribute('aria-label','Find My Size');
     const content=create('div','bss-v12-calculator-grid');
     const figure=create('div','bss-v12-image');
-    const imageURL=root?.dataset.bssImage || settings()?.dataset.bssImage || '';
+    const imageURL=chart?.measurementImageUrl || root?.dataset.bssImage || settings()?.dataset.bssImage || '';
     if(imageURL && /^(https?:\/\/|\/\/|\/)/.test(imageURL)) {
       const img=create('img');img.src=imageURL;img.alt='Model showing where to take body measurements';img.loading='lazy';figure.append(img);
     }else {figure.hidden=true;content.classList.add('bss-v12-no-image');}
@@ -217,43 +217,22 @@
       }
       form.append(inputArea);
     }
-    // Helpers sit above the primary action, as in the approved reference.
+    // The result occupies the visual gap between inputs and the single CTA.
+    // No How to Measure or duplicate Size Chart buttons; the chart-level image
+    // is the measurement illustration and the centered top switch handles views.
+    form.append(result);
     const actions=create('div','bss-v12-actions');
-    const helpers=create('div','bss-v12-helpers');
-    const helpBtn=create('button','bss-v12-helper','How to measure');helpBtn.type='button';
-    helpBtn.setAttribute('aria-expanded','false');
-    const help=create('div','bss-v12-measure-help');help.hidden=true;
-    help.setAttribute('role','note');
-    const guidance={
-      bust:'Measure around the fullest part of your bust, keeping the tape level.',
-      underbust:'Measure directly below your bust, keeping the tape comfortably snug.',
-      waist:'Measure your natural waist, without pulling the tape tight.',
-      hips:'Measure around the fullest part of your hips, keeping the tape level.'
-    };
-    for(const d of dims){
-      const sentence=guidance[d.key];if(!sentence)continue;
-      const p=create('p','');p.append(create('strong','',d.label+': '),doc.createTextNode(sentence));help.append(p);
-    }
-    helpBtn.addEventListener('click',()=>{
-      help.hidden=!help.hidden;helpBtn.setAttribute('aria-expanded',String(!help.hidden));
-    });
-    helpers.append(helpBtn);
-    const chartBtn=create('button','bss-v12-helper','View size chart');chartBtn.type='button';
-    chartBtn.addEventListener('click',()=>onChart?.());
-    helpers.append(chartBtn);actions.append(helpers,help);
     const submitRow=create('div','bss-v12-primary-row');
-    const btn=create('button','bss-v12-submit','Calculate my size');btn.type='submit';
-    if(approved&&dims.length)submitRow.append(btn);
-    if(!approved||!dims.length){
-      const fallback=create('button','bss-v12-submit','View size chart');fallback.type='button';
-      fallback.addEventListener('click',()=>onChart?.());submitRow.append(fallback);
+    if(approved&&dims.length){
+      const btn=create('button','bss-v12-submit','Calculate my size');btn.type='submit';
+      submitRow.append(btn);
     }
     actions.append(submitRow);form.append(actions);
     if(!approved){
-      const note=create('p','bss-v12-caution','Personalised size recommendations are being verified for this style. View the size chart for current measurements.');
+      const note=create('p','bss-v12-caution','Size recommendations are being verified for this style.');
       form.append(note);
     }else if(!dims.length){
-      form.append(create('p','bss-v12-caution','This style currently has no supported body-measurement fields.'));
+      form.append(create('p','bss-v12-caution','This chart does not yet have usable body measurements.'));
     }
     form.addEventListener('submit',e=>{
       e.preventDefault();if(!approved||!dims.length)return;
@@ -278,7 +257,7 @@
         result.append(create('p','bss-v12-caution',outcome.reason||'Please review your measurements.'));
       }
     });
-    form.append(result);content.append(figure,form);section.append(content);return section;
+    content.append(figure,form);section.append(content);return section;
   }
   function applyView(layer,mode,focus=true){
     const content=layer.querySelector('[data-bss-content]');if(!content)return;

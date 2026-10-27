@@ -504,3 +504,97 @@
 @media (prefers-reduced-motion:reduce){
   .bss-v12-enhanced .bss-v12-tab{transition:none!important}
 }
+
+
+/* ===== BirdEye Size Studio V12.1.1: final visual and stable sizing refinements ===== */
+/* White segmented surface; original BirdEye teal remains the active fill. */
+.bss-v12-enhanced .bss-v12-tabs {
+  background:#fff!important;
+  border:1px solid #e3e9eb!important;
+  box-shadow:none!important;
+}
+.bss-v12-enhanced .bss-v12-tab {
+  color:#173944!important;
+  background:#fff!important;
+  border-radius:999px!important;
+}
+.bss-v12-enhanced .bss-v12-tab.is-active {
+  color:#fff!important;
+  background:#033c4f!important;
+}
+.bss-v12-enhanced .bss-v12-tab:focus-visible {
+  outline:2px solid #033c4f!important;
+  outline-offset:2px!important;
+}
+/* Both modal states occupy one unchanging outer frame. Only content scrolls. */
+.bss__layer.bss-v12-enhanced[data-bss-mode="modal"] .bss__panel {
+  height:min(700px,calc(100dvh - 36px))!important;
+  min-height:0!important;
+  max-height:calc(100dvh - 36px)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  overflow:hidden!important;
+}
+.bss-v12-enhanced .bss__head { flex:0 0 auto!important; }
+.bss-v12-enhanced .bss__content {
+  flex:1 1 auto!important;
+  min-height:0!important;
+  overflow:auto!important;
+  scrollbar-gutter:stable!important;
+}
+.bss-v12-enhanced .bss-v12-chart-navigation { flex:0 0 auto!important; }
+.bss-v12-enhanced .bss-v12-calculator-grid { min-height:0!important; }
+.bss-v12-enhanced .bss-v12-image { height:min(52dvh,470px)!important;min-height:290px!important;max-height:470px!important; }
+.bss-v12-enhanced .bss-v12-image img,
+.bss-v12-enhanced .bss-v12-image img[src] {
+  object-fit:contain!important;
+  object-position:center center!important;
+  width:100%!important;height:100%!important;
+  max-height:100%!important;max-width:100%!important;
+  transform:none!important;scale:1!important;
+  position:static!important;
+}
+/* Result is between input rows and the one, centered primary CTA. */
+.bss-v12-enhanced .bss-v12-form { display:flex!important; flex-direction:column!important; }
+.bss-v12-enhanced .bss-v12-result {
+  order:2!important;
+  flex:0 0 auto!important;
+  min-height:50px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  margin:6px 0 0!important;padding:0!important;
+  border:0!important;background:transparent!important;box-shadow:none!important;
+}
+.bss-v12-enhanced .bss-v12-result:empty {
+  display:flex!important;
+}
+.bss-v12-enhanced .bss-v12-result:not(:empty) {
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  padding:0!important;margin:6px 0 0!important;
+}
+.bss-v12-enhanced .bss-v12-actions {
+  order:3!important;
+  margin-top:auto!important;
+  padding:9px 0 0!important;
+  gap:0!important;
+}
+.bss-v12-enhanced .bss-v12-primary-row {
+  justify-content:center!important;
+  align-items:center!important;
+}
+.bss-v12-enhanced .bss-v12-submit { min-width:170px!important; }
+.bss-v12-enhanced .bss-v12-caution { order:4!important; }
+/* Remove any stale helper presentations left behind by older CSS. */
+.bss-v12-enhanced .bss-v12-helpers,
+.bss-v12-enhanced .bss-v12-measure-help { display:none!important; }
+@media(max-width:760px){
+  .bss__layer.bss-v12-enhanced[data-bss-mode="modal"] .bss__panel {
+    height:calc(100dvh - 14px)!important;
+    max-height:calc(100dvh - 14px)!important;
+  }
+  .bss-v12-enhanced .bss__content{scrollbar-gutter:auto!important;}
+  .bss-v12-enhanced .bss-v12-image {height:min(24dvh,190px)!important;min-height:105px!important;max-height:190px!important;}
+  .bss-v12-enhanced .bss-v12-form {padding-bottom:10px!important;}
+  .bss-v12-enhanced .bss-v12-result{min-height:38px!important;margin-top:5px!important;}
+  .bss-v12-enhanced .bss-v12-actions {padding-top:4px!important;}
+  .bss-v12-enhanced .bss-v12-submit{min-width:160px!important;}
+}
