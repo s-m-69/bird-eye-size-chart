@@ -3,7 +3,7 @@
   'use strict';
   if (global.__BSS_V12_LOADED__) return;
   global.__BSS_V12_LOADED__ = true;
-  global.__BSS_V12_BUILD__ = '12.1.3';
+  global.__BSS_V12_BUILD__ = '13.0.1';
   const toInches = (n, unit) => unit === 'cm' ? n / 2.54 : n;
   const display = (s) => String(s ?? '').trim();
   const labels = ['Runs small','Runs slightly small','True to size','Runs slightly large','Runs large'];
@@ -182,9 +182,32 @@
     // Restore the scroll offset after releasing fixed positioning.
     if (Math.abs((global.scrollY || 0) - initial.y) > 1) global.scrollTo(0, initial.y);
   }
+  // A theme may close the PDP guide by hiding or detaching an *ancestor*,
+  // without setting the layer's own hidden attribute. In that state the old
+  // check reported an open guide forever and kept the entire page fixed.
+  function isVisibleSizeGuide(layer) {
+    if (!layer?.isConnected || layer.hidden || layer.closest('[hidden]')) return false;
+    if (layer.getAttribute('aria-hidden') === 'true') return false;
+    for (let node = layer; node && node.nodeType === 1; node = node.parentElement) {
+      const computed = global.getComputedStyle(node);
+      if (computed.display === 'none' || computed.visibility !== 'visible' ||
+          Number(computed.opacity) === 0) return false;
+    }
+    const rect = layer.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.right > 0 &&
+      rect.top < global.innerHeight && rect.left < global.innerWidth;
+  }
   function anyVisibleSizeGuide() {
     return Array.from(doc.querySelectorAll('[data-bss-layer].bss-v12-enhanced'))
-      .some(layer => layer.isConnected && !layer.hidden);
+      .some(isVisibleSizeGuide);
+  }
+  function reconcileAfterClose() {
+    // The legacy PDP controller (and some theme drawers) finish their close
+    // transitions after the click event. Re-check the real visibility at each
+    // phase, and release only this app's saved scroll lock when no guide shows.
+    queueMicrotask(syncBackgroundScroll);
+    global.requestAnimationFrame(() => global.requestAnimationFrame(syncBackgroundScroll));
+    global.setTimeout(syncBackgroundScroll, 400);
   }
   function syncBackgroundScroll() {
     if (anyVisibleSizeGuide()) lockBackground();
@@ -215,8 +238,8 @@
       dismissGuardUntil = Date.now() + 350;
       event.preventDefault();
       event.stopPropagation();
-      // Legacy close may move the layer back under its app block synchronously.
-      queueMicrotask(syncBackgroundScroll);
+      // Legacy close may hide the parent instead of the layer itself.
+      reconcileAfterClose();
     });
   }
   function supportBar(chart) {
@@ -676,7 +699,7 @@
     enhanceLayer(layer,root,data.chart);
     const prev=doc.activeElement;const overflow=doc.body.style.overflow;
     doc.body.style.overflow='hidden';syncBackgroundScroll();panel.focus();
-    function dismiss(){doc.removeEventListener('keydown',keys,true);root.remove();doc.body.style.overflow=overflow;syncBackgroundScroll();(prev?.isConnected?prev:opener)?.focus()}
+    function dismiss(){doc.removeEventListener('keydown',keys,true);root.remove();doc.body.style.overflow=overflow;syncBackgroundScroll();reconcileAfterClose();(prev?.isConnected?prev:opener)?.focus()}
     function keys(e){
       if(e.key==='Escape'){e.preventDefault();dismiss();return;}
       if(e.key!=='Tab')return;
@@ -699,7 +722,7 @@
     const clickClose = element?.closest?.('[data-bss-close],.bss__close,.bss__scrim');
     if (clickClose?.closest('[data-bss-layer].bss-v12-enhanced')) {
       dismissGuardUntil = Date.now() + 350;
-      queueMicrotask(syncBackgroundScroll);
+      reconcileAfterClose();
       return; // Preserve legacy PDP and Quick View close handlers.
     }
     const el=e.target?.closest?.('[data-bss-v12-quick-trigger],.bss-v9-trigger');
@@ -722,6 +745,21 @@
     if(Date.now()<dismissGuardUntil){e.preventDefault();e.stopImmediatePropagation();return;}
     e.preventDefault();e.stopPropagation();quickviewClick(el);
   },true);
-  function init(){scan();const observer=new MutationObserver(records=>{if(records.some(r=>r.addedNodes.length||r.removedNodes.length||r.attributeName==='hidden'))schedule()});observer.observe(doc.body,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden']});doc.addEventListener('shopify:section:load',schedule)}
+  function init(){
+    scan();
+    const observer=new MutationObserver(records=>{
+      if(records.some(r=>{
+        if(r.type==='childList')return r.addedNodes.length>0||r.removedNodes.length>0;
+        if(r.target===doc.body)return false; // Avoid observing our own body scroll-lock styles.
+        if(r.attributeName==='hidden')return true;
+        // Detect theme close animations that hide an ancestor by class/style.
+        const layer=doc.querySelector('[data-bss-layer].bss-v12-enhanced');
+        return !!layer && (r.target===layer || r.target.contains?.(layer));
+      }))schedule();
+    });
+    observer.observe(doc.body,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden','class','style','aria-hidden']});
+    doc.addEventListener('shopify:section:load',schedule);
+    global.addEventListener('pageshow',syncBackgroundScroll);
+  }
   if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })(typeof window!=='undefined'?window:globalThis);
