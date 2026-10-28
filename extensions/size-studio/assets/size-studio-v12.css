@@ -661,3 +661,33 @@
     letter-spacing:0!important;line-height:1.25!important;
   }
 }
+
+/* BirdEye Size Studio V13.0.3 — Mobile six-column table typography only.
+   Keep Overbust, Underbust and Shoulder on one line without scrolling.
+   Smaller charts and all desktop/tablet layouts remain unchanged. */
+@media (max-width:650px) {
+  .bss-v12-enhanced[data-bss-v12-view="chart"] table.bss__table:has(thead tr > :nth-child(6):last-child) thead th {
+    font-size:clamp(8px,2.3vw,9px)!important;
+    font-weight:650!important;
+    letter-spacing:-.025em!important;
+    line-height:1.2!important;
+    white-space:nowrap!important;
+    overflow-wrap:normal!important;
+    word-break:normal!important;
+    padding:7px 2px!important;
+  }
+  .bss-v12-enhanced[data-bss-v12-view="chart"] table.bss__table:has(thead tr > :nth-child(6):last-child) tbody th,
+  .bss-v12-enhanced[data-bss-v12-view="chart"] table.bss__table:has(thead tr > :nth-child(6):last-child) tbody td {
+    font-size:clamp(9px,2.5vw,10px)!important;
+    line-height:1.25!important;
+    padding:7px 2px!important;
+    white-space:nowrap!important;
+    overflow-wrap:normal!important;
+  }
+  .bss-v12-enhanced[data-bss-v12-view="chart"] table.bss__table:has(thead tr > :nth-child(6):last-child) thead th:nth-child(1) { width:15%!important }
+  .bss-v12-enhanced[data-bss-v12-view="chart"] table.bss__table:has(thead tr > :nth-child(6):last-child) thead th:nth-child(2) { width:18%!important }
+  .bss-v12-enhanced[data-bss-v12-view="chart"] table.bss__table:has(thead tr > :nth-child(6):last-child) thead th:nth-child(3) { width:20%!important }
+  .bss-v12-enhanced[data-bss-v12-view="chart"] table.bss__table:has(thead tr > :nth-child(6):last-child) thead th:nth-child(4) { width:18%!important }
+  .bss-v12-enhanced[data-bss-v12-view="chart"] table.bss__table:has(thead tr > :nth-child(6):last-child) thead th:nth-child(5) { width:14%!important }
+  .bss-v12-enhanced[data-bss-v12-view="chart"] table.bss__table:has(thead tr > :nth-child(6):last-child) thead th:nth-child(6) { width:15%!important }
+}
